@@ -5,17 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Migrations\20180923135944_FacultyId.cs" />
-    <Compile Remove="Migrations\20180923135944_FacultyId.Designer.cs" />
-    <Compile Remove="Migrations\20180923141057_FacultyId.cs" />
-    <Compile Remove="Migrations\20180923141057_FacultyId.Designer.cs" />
-    <Compile Remove="Migrations\20180923141645_FacultyIdremoved.cs" />
-    <Compile Remove="Migrations\20180923141645_FacultyIdremoved.Designer.cs" />
-    <Compile Remove="Migrations\20180923141843_FacultyID.cs" />
-    <Compile Remove="Migrations\20180923141843_FacultyID.Designer.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

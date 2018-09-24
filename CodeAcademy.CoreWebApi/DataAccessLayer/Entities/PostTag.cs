@@ -7,8 +7,6 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.Entities
 {
     public class PostTag
     {
-        public int ID { get; set; }
-
         public int PostId { get; set; }
         public Post Post { get; set; }
 

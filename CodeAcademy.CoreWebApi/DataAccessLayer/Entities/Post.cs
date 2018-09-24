@@ -31,8 +31,5 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.Entities
         public int FacultyId { get; set; }
         public Faculty Faculty { get; set; }
 
-        public int PhotoId { get; set; }
-        public Photo Photo { get; set; }
-
     }
 }

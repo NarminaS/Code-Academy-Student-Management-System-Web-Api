@@ -22,6 +22,15 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity
             builder.Entity<Post>().HasDiscriminator<string>("PostType");
             builder.Entity<AppIdentityUser>().HasDiscriminator<string>("UserType");
 
+            builder.Entity<PostTag>().HasKey(t => new { t.TagId, t.PostId });
+
+            builder.Entity<PostTag>().HasOne(t => t.Tag)
+                                     .WithMany(tp => tp.PostTags)
+                                     .HasForeignKey(ti => ti.TagId);
+
+            builder.Entity<PostTag>().HasOne(p => p.Post)
+                         .WithMany(tp => tp.PostTags)
+                         .HasForeignKey(pi => pi.PostId);
         }
 
 
@@ -37,6 +46,7 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity
         public DbSet<Gender> Genders { get; set; }
         public DbSet<Photo> Photos { get; set; }
         public DbSet<Tag> Tags { get; set; }
+
         public DbSet<PostTag> PostTags { get; set; }
 
         public DbSet<Post> Posts { get; set; }

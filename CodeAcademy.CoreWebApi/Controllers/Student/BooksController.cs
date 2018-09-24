@@ -45,42 +45,42 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
         public async Task<IActionResult> Add([FromForm] BookModel model)
         {
             bool saved;
-                if (ModelState.IsValid)
-                {
+            if (ModelState.IsValid)
+            {
                 string[] tags = model.Tags.Split(',');
                 List<Tag> bookTags = new List<Tag>();
                 foreach (var tag in tags)
-                    {
+                {
                     Tag t = await _context.GetByNameAsync<Tag>(x => x.Name.ToLower() == tag.Trim().ToLower());
                     bookTags.Add(t);
-                    }
+                }
 
-                    PhotoUploadCloudinary upload = new PhotoUploadCloudinary(_cloudinaryConfig);
-                    Photo photo = upload.Upload(model.Cover);
+                PhotoUploadCloudinary upload = new PhotoUploadCloudinary(_cloudinaryConfig);
+                Photo photo = upload.Upload(model.Cover);
 
-                    PdfUploadCloudinary pdfUpload = new PdfUploadCloudinary(_cloudinaryConfig);
-                    File file = pdfUpload.Upload(model.Book);
+                PdfUploadCloudinary pdfUpload = new PdfUploadCloudinary(_cloudinaryConfig);
+                File file = pdfUpload.Upload(model.Book);
 
                 Book item = new Book
                 {
                     Name = model.Name,
-                    AppIdentityUserId = "9f5732e2-ca9c-4b25-b7b7-23f3fb7c7e87",
+                    AppIdentityUser = await _auth.FindUserById("fff5ec56-f16a-4bd8-a01e-2dbd8ccba678"),
                     //User = await this.GetLoggedUser(_auth, _context),
                     Photo = photo,
                     File = file,
                     Author = model.Author,
-                    LanguageId = model.LanguageId,
+                    Language = await _context.GetByIdAsync<Language>(x => x.Id == model.LanguageId),
                     Year = model.Year,
                     Pages = model.Pages,
                     Description = model.Description,
-                    FacultyId = model.FacultyId
+                    Faculty = await _context.GetByIdAsync<Faculty>(x => x.Id == model.FacultyId)
                 };
 
                 List<PostTag> tagPosts = new List<PostTag>();
                 foreach (var tag in bookTags)
-                  {
+                {
                     tagPosts.Add(new PostTag() { Post = item, Tag = tag });
-                  }
+                }
 
                 item.PostTags = tagPosts;
 
@@ -89,10 +89,10 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
 
                 saved = _context.SaveAll();
                 if (saved == true)
-                  {
-                    return Ok(item);
-                  }
+                {
+                    return Ok(new BookViewModel(item));
                 }
+            }
             return BadRequest("Model is not valid");
         }
 
@@ -101,22 +101,29 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
         [Route("delete")]
         public async Task<IActionResult> Delete([FromForm] int id)
         {
-
             Book item = await _context.GetByIdAsync<Book>(x => x.Id == id);
             if (item != null)
             {
                 _context.Delete(item);
-                bool result = _context.SaveAll();
+                try
+                {
+                    bool result = _context.SaveAll();
 
-                if (result == true)
-                    return Ok(item);
-                else
-                    return BadRequest("Model cannot be  deleted");
+                    if (result == true)
+                        return Ok(item);
+                    else
+                        return BadRequest("Model cannot be  deleted");
+                }
+                catch (Exception ex)
+                {
+                   
+                }
             }
             else
             {
                 return NotFound("Model not found");
             }
+            return Ok();//Delete!!!
         }
 
 
@@ -220,7 +227,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
             List<Book> foundx = await _context.GetAllBooks();
             var found = foundx.Where(x => x.Name.ToLower().Contains(model.Name.ToLower())).ToList();
             List<BookViewModel> result = found.Select(x => new BookViewModel(x)).ToList();
-            if (found != null)
+            if (result.Count > 0)
                 return Ok(result);
             else
                 return NotFound("No book was found");

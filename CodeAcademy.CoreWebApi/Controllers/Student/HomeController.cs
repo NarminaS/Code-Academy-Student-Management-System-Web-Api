@@ -35,7 +35,25 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
         [Route("getall")]
         public async Task<IActionResult> GetAll()
         {
-            return Ok();
+            List<PostViewModel> postViewModels = new List<PostViewModel>();
+            try
+            {
+                List<Article> articles = await _context.GetPostsByType<Article>();
+                List<ArticleViewModel> articleViewModels = articles.Select(x => new ArticleViewModel(x)).ToList();
+
+                List<Book> books = await _context.GetAllBooks();
+                List<BookViewModel> bookViewModels = books.Select(x => new BookViewModel(x)).ToList();
+
+                postViewModels.AddRange(articleViewModels);
+                postViewModels.AddRange(bookViewModels);
+                postViewModels.OrderByDescending(x => x.DateAdded).ToList();
+
+            }
+            catch (Exception ex)
+            {
+                //
+            }
+            return Ok(postViewModels);
         }
 
         [HttpPost]
@@ -56,9 +74,8 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
                 {
                     HeadText = model.HeadText,
                     Text = model.Text,
-                    AppIdentityUserId = "9f5732e2-ca9c-4b25-b7b7-23f3fb7c7e87",
+                    AppIdentityUser = await _auth.FindUserById("b8a775d8-d462-4e26-9954-04735dda1721"),
                     FacultyId = 1,
-                    Photo = null
                     //AppIdentityUser =  this.GetLoggedUser(_auth, _context),
                     //FacultyId =  this.GetLoggedUser(_auth, _context).FacultyId ?? default(int),
                 };
@@ -72,9 +89,10 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
                 item.PostTags = artTags;
 
                 await _context.Add(item);
+
+                bool saved = _context.SaveAll();
                 try
                 {
-                    bool saved = _context.SaveAll();
                     if (saved == true)
                     {
                         return Ok(new ArticleViewModel(item));
@@ -82,20 +100,10 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
                 }
                 catch (Exception ex)
                 {
-                    //
+                    
                 }
             }
-            else
-            {
-                return BadRequest("Model is not valid");
-            }
-            return Ok();
+            return BadRequest("Model is not valid");
         }
-
-
-
-
-
-
     }
 }

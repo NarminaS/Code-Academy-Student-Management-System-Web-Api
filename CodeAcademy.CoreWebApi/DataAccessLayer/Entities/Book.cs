@@ -22,5 +22,8 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.Entities
 
         public int LanguageId { get; set; }
         public Language Language { get; set; }
+
+        public int PhotoId { get; set; }
+        public Photo Photo { get; set; }
     }
 }

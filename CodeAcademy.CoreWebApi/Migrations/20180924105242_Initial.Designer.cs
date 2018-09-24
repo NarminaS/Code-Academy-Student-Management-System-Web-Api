@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CodeAcademy.CoreWebApi.Migrations
 {
     [DbContext(typeof(AppIdentityDbContext))]
-    [Migration("20180923132134_filepublicid")]
-    partial class filepublicid
+    [Migration("20180924105242_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -394,11 +394,7 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
                     b.Property<DateTime>("DateAdded");
 
-                    b.Property<int?>("FacultyId1");
-
-                    b.Property<int>("FacutlyId");
-
-                    b.Property<int>("PhotoId");
+                    b.Property<int>("FacultyId");
 
                     b.Property<string>("PostType")
                         .IsRequired();
@@ -407,7 +403,7 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
                     b.HasIndex("AppIdentityUserId");
 
-                    b.HasIndex("FacultyId1");
+                    b.HasIndex("FacultyId");
 
                     b.ToTable("Posts");
 
@@ -416,19 +412,13 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
             modelBuilder.Entity("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.PostTag", b =>
                 {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                    b.Property<int>("TagId");
 
                     b.Property<int>("PostId");
 
-                    b.Property<int>("TagId");
-
-                    b.HasKey("ID");
+                    b.HasKey("TagId", "PostId");
 
                     b.HasIndex("PostId");
-
-                    b.HasIndex("TagId");
 
                     b.ToTable("PostTags");
                 });
@@ -649,8 +639,6 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
                     b.Property<string>("Text");
 
-                    b.HasIndex("PhotoId");
-
                     b.ToTable("Article");
 
                     b.HasDiscriminator().HasValue("Article");
@@ -664,8 +652,6 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
                     b.Property<string>("Description");
 
-                    b.Property<int?>("FacultyId");
-
                     b.Property<int>("FileId");
 
                     b.Property<bool>("IsApproved")
@@ -677,16 +663,15 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
                     b.Property<int>("Pages");
 
-                    b.Property<int>("Year");
+                    b.Property<int>("PhotoId");
 
-                    b.HasIndex("FacultyId");
+                    b.Property<int>("Year");
 
                     b.HasIndex("FileId");
 
                     b.HasIndex("LanguageId");
 
-                    b.HasIndex("PhotoId")
-                        .HasName("IX_Posts_PhotoId1");
+                    b.HasIndex("PhotoId");
 
                     b.ToTable("Book");
 
@@ -702,8 +687,6 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
                     b.Property<string>("LinkUrl");
 
-                    b.HasIndex("PhotoId");
-
                     b.ToTable("Link");
 
                     b.HasDiscriminator().HasValue("Link");
@@ -715,6 +698,9 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
                     b.Property<string>("HeadText")
                         .HasColumnName("Question_HeadText");
+
+                    b.Property<int>("PhotoId")
+                        .HasColumnName("Question_PhotoId");
 
                     b.Property<string>("Text")
                         .HasColumnName("Question_Text");
@@ -840,13 +826,14 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
             modelBuilder.Entity("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.Post", b =>
                 {
-                    b.HasOne("CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity.AppIdentityUser", "User")
+                    b.HasOne("CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity.AppIdentityUser", "AppIdentityUser")
                         .WithMany("Posts")
                         .HasForeignKey("AppIdentityUserId");
 
                     b.HasOne("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.Faculty", "Faculty")
                         .WithMany("Posts")
-                        .HasForeignKey("FacultyId1");
+                        .HasForeignKey("FacultyId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.PostTag", b =>
@@ -944,20 +931,8 @@ namespace CodeAcademy.CoreWebApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.Article", b =>
-                {
-                    b.HasOne("CodeAcademy.CoreWebApi.Entities.Photo", "Photo")
-                        .WithMany()
-                        .HasForeignKey("PhotoId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
             modelBuilder.Entity("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.Book", b =>
                 {
-                    b.HasOne("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.Faculty")
-                        .WithMany("Books")
-                        .HasForeignKey("FacultyId");
-
                     b.HasOne("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.File", "File")
                         .WithMany()
                         .HasForeignKey("FileId")
@@ -970,15 +945,6 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
                     b.HasOne("CodeAcademy.CoreWebApi.Entities.Photo", "Photo")
                         .WithMany("Books")
-                        .HasForeignKey("PhotoId")
-                        .HasConstraintName("FK_Posts_Photos_PhotoId1")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.Link", b =>
-                {
-                    b.HasOne("CodeAcademy.CoreWebApi.Entities.Photo", "Photo")
-                        .WithMany()
                         .HasForeignKey("PhotoId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });

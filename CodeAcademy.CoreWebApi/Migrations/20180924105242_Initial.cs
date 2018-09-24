@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace CodeAcademy.CoreWebApi.Migrations
 {
-    public partial class initial : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -29,6 +29,7 @@ namespace CodeAcademy.CoreWebApi.Migrations
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     Url = table.Column<string>(nullable: true),
+                    PublicId = table.Column<string>(nullable: true),
                     Description = table.Column<string>(nullable: true),
                     DateAdded = table.Column<DateTime>(nullable: false),
                     IsMain = table.Column<bool>(nullable: false)
@@ -74,7 +75,7 @@ namespace CodeAcademy.CoreWebApi.Migrations
                     Tuesday = table.Column<bool>(nullable: false),
                     Wednesday = table.Column<bool>(nullable: false),
                     Thursday = table.Column<bool>(nullable: false),
-                    Fruday = table.Column<bool>(nullable: false),
+                    Friday = table.Column<bool>(nullable: false),
                     Saturday = table.Column<bool>(nullable: false),
                     Sunday = table.Column<bool>(nullable: false),
                     BeginHour = table.Column<byte>(nullable: false),
@@ -109,7 +110,8 @@ namespace CodeAcademy.CoreWebApi.Migrations
                     Url = table.Column<string>(nullable: true),
                     Description = table.Column<string>(nullable: true),
                     DateAdded = table.Column<DateTime>(nullable: false),
-                    IsMain = table.Column<bool>(nullable: false)
+                    IsMain = table.Column<bool>(nullable: false),
+                    PublicId = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -170,7 +172,7 @@ namespace CodeAcademy.CoreWebApi.Migrations
                         column: x => x.PhotoId,
                         principalTable: "Photos",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -238,7 +240,7 @@ namespace CodeAcademy.CoreWebApi.Migrations
                         column: x => x.PhotoId,
                         principalTable: "Photos",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
                         name: "FK_Groups_Rooms_RoomId",
                         column: x => x.RoomId,
@@ -253,7 +255,7 @@ namespace CodeAcademy.CoreWebApi.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    Name = table.Column<int>(nullable: false),
+                    Name = table.Column<string>(nullable: true),
                     FacultyId = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
@@ -454,38 +456,28 @@ namespace CodeAcademy.CoreWebApi.Migrations
                     PostType = table.Column<string>(nullable: false),
                     DateAdded = table.Column<DateTime>(nullable: false),
                     AppIdentityUserId = table.Column<string>(nullable: true),
-                    PhotoId = table.Column<int>(nullable: false),
+                    FacultyId = table.Column<int>(nullable: false),
                     HeadText = table.Column<string>(nullable: true),
                     Text = table.Column<string>(nullable: true),
                     IsApproved = table.Column<bool>(nullable: true),
                     Name = table.Column<string>(nullable: true),
                     Author = table.Column<string>(nullable: true),
                     Pages = table.Column<int>(nullable: true),
+                    Description = table.Column<string>(nullable: true),
                     Year = table.Column<int>(nullable: true),
                     Book_IsApproved = table.Column<bool>(nullable: true),
                     FileId = table.Column<int>(nullable: true),
                     LanguageId = table.Column<int>(nullable: true),
-                    FacultyId = table.Column<int>(nullable: true),
+                    PhotoId = table.Column<int>(nullable: true),
                     Link_HeadText = table.Column<string>(nullable: true),
                     LinkUrl = table.Column<string>(nullable: true),
                     Question_HeadText = table.Column<string>(nullable: true),
-                    Question_Text = table.Column<string>(nullable: true)
+                    Question_Text = table.Column<string>(nullable: true),
+                    Question_PhotoId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Posts", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Posts_Photos_PhotoId",
-                        column: x => x.PhotoId,
-                        principalTable: "Photos",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Posts_Faculties_FacultyId",
-                        column: x => x.FacultyId,
-                        principalTable: "Faculties",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Posts_Files_FileId",
                         column: x => x.FileId,
@@ -499,12 +491,29 @@ namespace CodeAcademy.CoreWebApi.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
+                        name: "FK_Posts_Photos_PhotoId",
+                        column: x => x.PhotoId,
+                        principalTable: "Photos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_Posts_AspNetUsers_AppIdentityUserId",
                         column: x => x.AppIdentityUserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-
+                    table.ForeignKey(
+                        name: "FK_Posts_Faculties_FacultyId",
+                        column: x => x.FacultyId,
+                        principalTable: "Faculties",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
+                    table.ForeignKey(
+                        name: "FK_Posts_Photos_Question_PhotoId",
+                        column: x => x.Question_PhotoId,
+                        principalTable: "Photos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -575,14 +584,12 @@ namespace CodeAcademy.CoreWebApi.Migrations
                 name: "PostTags",
                 columns: table => new
                 {
-                    ID = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     PostId = table.Column<int>(nullable: false),
                     TagId = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PostTags", x => x.ID);
+                    table.PrimaryKey("PK_PostTags", x => new { x.TagId, x.PostId });
                     table.ForeignKey(
                         name: "FK_PostTags_Posts_PostId",
                         column: x => x.PostId,
@@ -594,7 +601,7 @@ namespace CodeAcademy.CoreWebApi.Migrations
                         column: x => x.TagId,
                         principalTable: "Tags",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -781,16 +788,6 @@ namespace CodeAcademy.CoreWebApi.Migrations
                 column: "MentorId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Posts_PhotoId",
-                table: "Posts",
-                column: "PhotoId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Posts_FacultyId",
-                table: "Posts",
-                column: "FacultyId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Posts_FileId",
                 table: "Posts",
                 column: "FileId");
@@ -800,24 +797,30 @@ namespace CodeAcademy.CoreWebApi.Migrations
                 table: "Posts",
                 column: "LanguageId");
 
-
+            migrationBuilder.CreateIndex(
+                name: "IX_Posts_PhotoId",
+                table: "Posts",
+                column: "PhotoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Posts_AppIdentityUserId",
                 table: "Posts",
                 column: "AppIdentityUserId");
 
+            migrationBuilder.CreateIndex(
+                name: "IX_Posts_FacultyId",
+                table: "Posts",
+                column: "FacultyId");
 
+            migrationBuilder.CreateIndex(
+                name: "IX_Posts_Question_PhotoId",
+                table: "Posts",
+                column: "Question_PhotoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PostTags_PostId",
                 table: "PostTags",
                 column: "PostId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PostTags_TagId",
-                table: "PostTags",
-                column: "TagId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tags_FacultyId",

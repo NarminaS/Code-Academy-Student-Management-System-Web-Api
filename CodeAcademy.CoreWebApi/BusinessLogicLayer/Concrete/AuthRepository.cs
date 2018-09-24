@@ -1,5 +1,6 @@
 ﻿using CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract;
 using CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity;
+using CodeAcademy.CoreWebApi.Entities;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
@@ -114,6 +115,9 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
         public async Task<AppIdentityUser> FindUserById(string id)
         {
             AppIdentityUser user = await _usermanager.FindByIdAsync(id);
+            Photo userPhoto = _context.Photos.SingleOrDefault(x => x.Id == user.PhotoId);
+            user.Photo = userPhoto;
+            //TODO: Remove THIS Code line 118, 119!
             if (user != null)
                 return user;
             else

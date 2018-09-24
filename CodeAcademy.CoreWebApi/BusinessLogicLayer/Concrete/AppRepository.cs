@@ -35,7 +35,6 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
         {
             var all = await _context.Set<T>()
                                             .Include(x => x.PostTags).ThenInclude(x => x.Tag)
-                                            .Include(x => x.Photo)
                                             .Include(x => x.Likes)
                                             .Include(x => x.AppIdentityUser).ThenInclude(x => x.Photo)
                                             .ToListAsync();
