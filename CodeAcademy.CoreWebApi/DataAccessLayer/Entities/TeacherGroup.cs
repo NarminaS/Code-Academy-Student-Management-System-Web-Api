@@ -15,7 +15,6 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.Entities
             DateAdded = DateTime.Now;
         }
 
-        public string AppIdentityUserId { get; set; }
         public Teacher Teacher { get; set; }
 
         public int GroupId { get; set; }

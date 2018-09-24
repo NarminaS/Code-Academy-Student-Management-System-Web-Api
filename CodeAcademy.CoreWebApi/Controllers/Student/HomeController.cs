@@ -74,7 +74,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
                 {
                     HeadText = model.HeadText,
                     Text = model.Text,
-                    AppIdentityUser = await _auth.FindUserById("b8a775d8-d462-4e26-9954-04735dda1721"),
+                    AppIdentityUser = await _auth.FindUserById("fff5ec56-f16a-4bd8-a01e-2dbd8ccba678"),
                     FacultyId = 1,
                     //AppIdentityUser =  this.GetLoggedUser(_auth, _context),
                     //FacultyId =  this.GetLoggedUser(_auth, _context).FacultyId ?? default(int),
@@ -100,7 +100,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
                 }
                 catch (Exception ex)
                 {
-                    
+                    //...
                 }
             }
             return BadRequest("Model is not valid");
