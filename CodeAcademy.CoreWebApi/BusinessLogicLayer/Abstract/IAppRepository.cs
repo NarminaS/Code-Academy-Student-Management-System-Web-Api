@@ -19,11 +19,13 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract
         void Delete<T>(T entity) where T : class;
         bool SaveAll();
 
-        Task<List<T>> GetPostsByType<T>() where T : Post;
         //sigle methods
         //..
         Photo GetPhoto(int photoId);
         Task<List<Book>> GetAllBooks();
+        Task<List<Article>> GetAllArticles();
+        Task<List<Link>> GetAllLinks();
+        Task<List<Question>> GetAllQuestions();
         Task<List<LeftNavItem>> GetLeftNavItems();
         Task<List<Faculty>> GetFacultiesAsync();
         Task<List<Tag>> GetTagsAsync();

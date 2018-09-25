@@ -19,5 +19,9 @@ namespace CodeAcademy.CoreWebApi.ViewModels
         public List<TagModel> Tags { get; set; }
 
         public int LikeCount { get; set; }
+
+        public int FacultyId { get; set; }
+
+        public string PostType { get; set; }    
     }
 }

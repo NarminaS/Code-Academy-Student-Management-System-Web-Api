@@ -13,7 +13,6 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.Entities
         public string Name { get; set; }
         public string Author { get; set; }
         public int Pages { get; set; }
-        public string Description { get; set; } 
         public int Year { get; set; }
         public bool IsApproved { get; set; }
 

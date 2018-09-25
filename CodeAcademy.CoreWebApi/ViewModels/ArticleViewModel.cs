@@ -11,6 +11,7 @@ namespace CodeAcademy.CoreWebApi.ViewModels
     {
         public ArticleViewModel(Article article)
         {
+            this.Id = article.Id;
             this.DateAdded = article.DateAdded;
             this.HeadText = article.HeadText;
             this.Text = article.Text;
@@ -21,6 +22,8 @@ namespace CodeAcademy.CoreWebApi.ViewModels
             this.UserSurname = article.AppIdentityUser.Surname;
             this.UserPhoto = article.AppIdentityUser.Photo.Url;
             this.LikeCount = article.Likes.Count;
+            this.FacultyId = article.FacultyId;
+            this.PostType = article.PostType;
         }
 
         public string HeadText { get; set; }
@@ -30,5 +33,7 @@ namespace CodeAcademy.CoreWebApi.ViewModels
         public bool IsApproved { get; set; }
 
         public string UserPhoto { get; set; }
+
+        public int Id { get; set; } 
     }
 }

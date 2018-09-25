@@ -5,9 +5,11 @@ using CodeAcademy.CoreWebApi.Entities;
 using CodeAcademy.CoreWebApi.Helpers.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CodeAcademy.CoreWebApi.Helpers.Extensions
@@ -30,8 +32,11 @@ namespace CodeAcademy.CoreWebApi.Helpers.Extensions
 
         public static AppIdentityUser GetLoggedUser(this ControllerBase controller, IAuthRepository authRepo, IAppRepository appRepo)
         {
-            var email = controller.HttpContext.User.Identity.Name;
-            AppIdentityUser user = authRepo.FindUserByEmail(email).Result;
+            var bearerToken = controller.Request.Headers["Authorization"].ToString();
+            //var token = controller.Request.Headers["token"].ToString();
+            string token = bearerToken.Substring(7);
+
+            AppIdentityUser user = authRepo.GetUserFromToken(token);
 
             if (user != null)
             {
@@ -42,6 +47,7 @@ namespace CodeAcademy.CoreWebApi.Helpers.Extensions
                     Photo studPhoto = appRepo.GetPhoto(student.PhotoId);
                     student.FacultyId = group.FacultyId;
                     student.Photo = studPhoto;
+                    student.Group = group;
                     return student;
                 }
                 if (user.UserType == "Teacher")
@@ -54,6 +60,24 @@ namespace CodeAcademy.CoreWebApi.Helpers.Extensions
                 return user;
             }
             return null;
+        }
+
+        public static bool ValidRoleForAction(this ControllerBase controller, IAppRepository appRepo, IAuthRepository auth, params string[] roleNames)
+        {
+            AppIdentityUser user = controller.GetLoggedUser(auth, appRepo);
+            foreach (string role in roleNames)
+            {
+                bool isValid = auth.CheckUserRole(user, role).Result;
+                if (isValid == false)
+                {
+                    continue;
+                }
+
+                if (isValid == true)
+                    return true;
+            }
+           
+            return false;
         }
     }
 }

@@ -53,9 +53,14 @@ namespace CodeAcademy.CoreWebApi.Controllers
                     claims: claims,
                     signingCredentials: new Microsoft.IdentityModel.Tokens.SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256)
                     );
+
+                var usertoken = new JwtSecurityTokenHandler().WriteToken(token);
+                user.LoginToken = usertoken;
+                await _authrepository.UpdateUser(user);
+
                 return Ok(new
                 {
-                    token = new JwtSecurityTokenHandler().WriteToken(token),
+                    token = usertoken,
                     expiration = token.ValidTo
                 });
             }

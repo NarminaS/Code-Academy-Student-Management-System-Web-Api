@@ -193,5 +193,19 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
             }
             return null;
         }
+
+        public async Task<bool> CheckUserRole(AppIdentityUser user, string roleName)
+        {
+            if (await _usermanager.IsInRoleAsync(user, roleName))
+                return true;
+            else
+                return false;
+        }
+
+        public AppIdentityUser GetUserFromToken(string token)
+        {
+           AppIdentityUser user =  _context.Users.Where(x=>x.LoginToken==token).FirstOrDefault();
+           return user;
+        }
     }
 }

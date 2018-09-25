@@ -5,11 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CodeAcademy.CoreWebApi.ViewModels
+namespace CodeAcademy.CoreWebApi.EditedDataModels
 {
-    public class BookViewModel:PostViewModel
+    public class BookEditModel
     {
-        public BookViewModel(Book book)
+        public BookEditModel(Book book)
         {
             this.Id = book.Id;
             this.Name = book.Name;
@@ -19,15 +19,11 @@ namespace CodeAcademy.CoreWebApi.ViewModels
             this.BookPath = book.File.Url;
             this.CoverPath = book.Photo.Url;
             this.Language = book.Language.Name;
-            this.UserId = book.AppIdentityUser.Id;
-            this.UserName = book.AppIdentityUser.Name;
-            this.UserSurname = book.AppIdentityUser.Surname;
             this.Tags = book.PostTags.Select(x => new TagModel { Id = x.TagId, Name = x.Tag.Name }).ToList();
-            this.LikeCount = book.Likes.Count;
-            this.DateAdded = book.DateAdded;
-            this.FacultyId = book.FacultyId;
-            this.PostType = book.PostType;
         }
+
+        public int EditedUserId { get; set; }
+
         public int Id { get; set; }
 
         public string Name { get; set; }
@@ -43,5 +39,7 @@ namespace CodeAcademy.CoreWebApi.ViewModels
         public string CoverPath { get; set; }
 
         public string Language { get; set; }
+
+        public List<TagModel> Tags { get; set; }
     }
 }

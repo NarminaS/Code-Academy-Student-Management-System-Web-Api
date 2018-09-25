@@ -4,14 +4,16 @@ using CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CodeAcademy.CoreWebApi.Migrations
 {
     [DbContext(typeof(AppIdentityDbContext))]
-    partial class AppIdentityDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180925054024_BookDescriptionRemoved")]
+    partial class BookDescriptionRemoved
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -89,8 +91,6 @@ namespace CodeAcademy.CoreWebApi.Migrations
                     b.Property<bool>("PhoneNumberConfirmed");
 
                     b.Property<int>("PhotoId");
-
-                    b.Property<int>("Point");
 
                     b.Property<string>("SecurityStamp");
 
@@ -695,7 +695,7 @@ namespace CodeAcademy.CoreWebApi.Migrations
                     b.Property<string>("HeadText")
                         .HasColumnName("Question_HeadText");
 
-                    b.Property<int>("PhotoId")
+                    b.Property<int?>("PhotoId")
                         .HasColumnName("Question_PhotoId");
 
                     b.Property<string>("Text")
@@ -949,8 +949,7 @@ namespace CodeAcademy.CoreWebApi.Migrations
                 {
                     b.HasOne("CodeAcademy.CoreWebApi.Entities.Photo", "Photo")
                         .WithMany()
-                        .HasForeignKey("PhotoId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("PhotoId");
                 });
 #pragma warning restore 612, 618
         }

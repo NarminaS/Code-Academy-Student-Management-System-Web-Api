@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract;
+using CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity;
 using CodeAcademy.CoreWebApi.DataAccessLayer.Entities;
 using CodeAcademy.CoreWebApi.DataTransferObject;
 using CodeAcademy.CoreWebApi.Entities;
@@ -72,7 +73,6 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
                     Language = await _context.GetByIdAsync<Language>(x => x.Id == model.LanguageId),
                     Year = model.Year,
                     Pages = model.Pages,
-                    Description = model.Description,
                     Faculty = await _context.GetByIdAsync<Faculty>(x => x.Id == model.FacultyId)
                 };
 
@@ -99,31 +99,33 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
 
         [HttpPost]
         [Route("delete")]
-        public async Task<IActionResult> Delete([FromForm] int id)
+        public async Task<IActionResult> Delete([FromForm] int id, string userId)
         {
+            //AppIdentityUser current = this.GetLoggedUser(_auth, _context);
+            //if (current.Id == userId || await _auth.CheckUserRole(current, "Editor"))
+            //{
+            //    //Copy delete code here...
+            //}
+            //else
+            //{
+            //    return Forbid("You dont't have a permission");
+            //}
+
             Book item = await _context.GetByIdAsync<Book>(x => x.Id == id);
             if (item != null)
             {
                 _context.Delete(item);
-                try
-                {
-                    bool result = _context.SaveAll();
+                bool result = _context.SaveAll();
 
-                    if (result == true)
-                        return Ok(item);
-                    else
-                        return BadRequest("Model cannot be  deleted");
-                }
-                catch (Exception ex)
-                {
-                   
-                }
+                if (result == true)
+                    return Ok(item);
+                else
+                    return BadRequest("Model cannot be  deleted");
             }
             else
             {
                 return NotFound("Model not found");
             }
-            return Ok();//Delete!!!
         }
 
 
@@ -131,6 +133,15 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
         [Route("update")]
         public async Task<IActionResult> Update([FromForm] BookModel model)
         {
+            //AppIdentityUser current = this.GetLoggedUser(_auth, _context);
+            //if (model.UserId==current.Id || await _auth.CheckUserRole(current,"Editor"))
+            //{
+            //    //Copy edit code here...
+            //}
+            //else
+            //{
+            //    return Forbid("You dont't have a permission");
+            //}
             bool saved;
             if (ModelState.IsValid)
             {
@@ -152,7 +163,6 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
 
                 item.Name = model.Name;
                 item.Author = model.Author;
-                item.Description = model.Description;
                 item.Year = model.Year;
                 item.File = file;
                 item.Photo = photo;

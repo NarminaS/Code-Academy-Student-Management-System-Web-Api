@@ -39,5 +39,7 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity
 
         public int PhotoId { get; set; }
         public Photo Photo { get; set; }
+
+        public int Point { get; set; }  
     }
 }

@@ -12,7 +12,9 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract
         Task<AppIdentityUser> Register(AppIdentityUser user, string password);
         Task<AppIdentityUser> AddUserToRole(AppIdentityUser user, string roleName);
         Task<AppIdentityUser> ConfirmEmail(AppIdentityUser user, string code);
+        Task<bool> CheckUserRole(AppIdentityUser user, string roleName);
         Task<string> GenerateEmailConfirmToken(AppIdentityUser user);
+        AppIdentityUser GetUserFromToken(string token);
         Task<AppIdentityUser> Login(string username, string password);
         Task<AppIdentityUser> UpdateUser(AppIdentityUser user);
         Task<AppIdentityUser> DeleteUser(AppIdentityUser user);

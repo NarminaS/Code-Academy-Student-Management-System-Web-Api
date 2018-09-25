@@ -12,6 +12,8 @@ namespace CodeAcademy.CoreWebApi.DataTransferObject
     {
         public int Id { get; set; }
 
+        public string UserId { get; set; }  
+
         [Required]
         public string Name { get; set; }
 

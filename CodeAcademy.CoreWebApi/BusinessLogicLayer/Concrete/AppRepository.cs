@@ -31,16 +31,6 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
              _context.Remove(entity);
         }
 
-        public async Task<List<T>> GetPostsByType<T>() where T : Post
-        {
-            var all = await _context.Set<T>()
-                                            .Include(x => x.PostTags).ThenInclude(x => x.Tag)
-                                            .Include(x => x.Likes)
-                                            .Include(x => x.AppIdentityUser).ThenInclude(x => x.Photo)
-                                            .ToListAsync();
-            return all;
-        }
-
         public async Task<List<Book>> GetAllBooks()
         {
             List<Book> books = await _context.Books.Include(x=>x.PostTags).ThenInclude(x=>x.Tag)
@@ -125,6 +115,37 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
         {
             var postTags = await _context.PostTags.Where(x => x.PostId == post.Id).ToListAsync();
             return postTags;
+        }
+
+        public async Task<List<Article>> GetAllArticles()
+        {
+            List<Article> articles = await _context.Articles
+                                        .Include(x => x.PostTags).ThenInclude(x => x.Tag)
+                                        .Include(x => x.Likes)
+                                        .Include(x => x.AppIdentityUser).ThenInclude(x => x.Photo)
+                                        .ToListAsync();
+            return articles;
+        }
+
+        public async Task<List<Link>> GetAllLinks()
+        {
+            List<Link> links = await _context.Links
+                             .Include(x => x.PostTags).ThenInclude(x => x.Tag)
+                             .Include(x => x.Likes)
+                             .Include(x => x.AppIdentityUser).ThenInclude(x => x.Photo)
+                             .ToListAsync();
+            return links;
+        }
+
+        public async Task<List<Question>> GetAllQuestions()
+        {
+            List<Question> questions = await _context.Questions
+                                         .Include(x => x.PostTags).ThenInclude(x => x.Tag)
+                                         .Include(x => x.Photo)
+                                         .Include(x => x.Likes)
+                                         .Include(x => x.AppIdentityUser).ThenInclude(x=>x.Photo)
+                                         .ToListAsync();
+            return questions;
         }
     }
 }

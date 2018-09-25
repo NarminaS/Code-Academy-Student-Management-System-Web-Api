@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="DropdownModels\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
