@@ -21,6 +21,7 @@ namespace CodeAcademy.CoreWebApi.ViewModels
             this.UserName = article.AppIdentityUser.Name;
             this.UserSurname = article.AppIdentityUser.Surname;
             this.UserPhoto = article.AppIdentityUser.Photo.Url;
+            this.UserType = article.AppIdentityUser.UserType;
             this.LikeCount = article.Likes.Count;
             this.FacultyId = article.FacultyId;
             this.PostType = article.PostType;
@@ -31,9 +32,5 @@ namespace CodeAcademy.CoreWebApi.ViewModels
         public string Text { get; set; }
 
         public bool IsApproved { get; set; }
-
-        public string UserPhoto { get; set; }
-
-        public int Id { get; set; } 
     }
 }

@@ -147,5 +147,127 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
                                          .ToListAsync();
             return questions;
         }
+
+        public async Task<Question> GetQuestion(int questionId)
+        {
+            Question question = await _context.Questions.Include(x=>x.Photo)
+                                                        .Include(x=>x.AppIdentityUser).ThenInclude(x=>x.Photo)
+                                                        .Include(x=>x.Comments)
+                                                            .FirstOrDefaultAsync(x => x.Id == questionId);
+            return question;
+        }
+
+        public async Task<Post> GetPost(int postId)
+        {
+            Post post = await _context.Posts.Include(l => l.Likes)
+                                                    .Include(u => u.AppIdentityUser)
+                                                    .Include(l=>l.Likes)
+                                                    .FirstOrDefaultAsync(x => x.Id == postId);
+            return post;
+        }
+
+        public async Task<Like> GetLike(int postId, string userId)
+        {
+            Like like = await _context.Likes.FirstOrDefaultAsync(x => x.PostId == postId && x.AppIdentityUserId == userId);
+            return like;
+        }
+
+        public async Task<List<Group>> GetAllGroups()
+        {
+            List<Group> groups = await _context.Groups.ToListAsync();
+            return groups;
+        }
+
+        public async Task<PostTag> GetPostTag(int postId, int tagId)
+        {
+            PostTag postTag = await _context.PostTags.FirstOrDefaultAsync(x => x.PostId == postId && x.TagId == tagId);
+            return postTag;
+        }
+
+        public async Task<List<Post>> FilterPosts(int facultyId, int tagId, string postType)
+        {
+            List<Post> posts = new List<Post>();
+
+            posts.AddRange(await GetAllArticles());
+            posts.AddRange(await GetAllBooks());
+            posts.AddRange(await GetAllQuestions());
+            posts.AddRange(await GetAllLinks());
+
+            if (facultyId != default(int))
+            {
+                posts = posts.Where(x => x.FacultyId == facultyId).ToList();
+            }
+         
+            if (tagId != default(int))
+            {
+                List<Post> filteredByTag = new List<Post>();
+                foreach (var post in posts)
+                {
+                    foreach (var pt in await GetPostTags(post))
+                    {
+                        if (pt.PostId == post.Id && pt.TagId == tagId)
+                        {
+                            filteredByTag.Add(post);
+                        }
+                    }
+                }
+                posts = filteredByTag;
+            }
+            if (postType != String.Empty)
+            {
+                posts = posts.Where(x => x.PostType == postType).ToList();
+            }
+
+            return posts;
+
+        }
+
+        public async Task<List<Book>> FilterBooks(int facultyId, int languageId, int tagId)    
+        {
+            List<Book> books = await GetAllBooks();
+
+            if (facultyId != default(int))
+            {
+                books = books.Where(x => x.FacultyId == facultyId).ToList();
+            }
+
+            if (tagId != default(int))
+            {
+                List<Book> filteredByTag = new List<Book>();
+                foreach (var book in books)
+                {
+                    foreach (var pt in await GetPostTags(book))
+                    {
+                        if (pt.PostId == book.Id && pt.TagId == tagId)
+                        {
+                            filteredByTag.Add(book);
+                        }
+                    }
+                }
+                books = filteredByTag;
+            }
+
+            if (languageId != default(int))
+            {
+                books = books.Where(x => x.LanguageId == languageId).ToList();
+            }
+            return books;
+        }
+
+        public string GetUserGroup(string id)
+        {
+            string groupName = _context.Students.Include(x => x.Group).FirstOrDefault(x => x.Id == id).Group.Name;
+            return groupName;
+        }
+
+        public async Task<List<Tag>> GetTagsByFaculty(int facultyId)
+        {
+            if (facultyId != default(int))
+            {
+                List<Tag> tags = await _context.Tags.Include(x => x.PostTags).Where(x => x.FacultyId == facultyId).ToListAsync();
+                return tags;
+            }
+            return await _context.Tags.Include(x => x.PostTags).ToListAsync();
+        }
     }
 }

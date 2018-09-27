@@ -8,6 +8,8 @@ namespace CodeAcademy.CoreWebApi.ViewModels
 {
     public class PostViewModel
     {
+        public int Id { get; set; }
+
         public DateTime DateAdded { get; set; }
 
         public string UserId { get; set; }
@@ -15,6 +17,12 @@ namespace CodeAcademy.CoreWebApi.ViewModels
         public string UserName { get; set; }
 
         public string UserSurname { get; set; }
+
+        public string GroupName { get; set; }
+
+        public string UserPhoto { get; set; }
+
+        public string UserType { get; set; }    
 
         public List<TagModel> Tags { get; set; }
 

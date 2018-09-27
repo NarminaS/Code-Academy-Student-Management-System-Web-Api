@@ -4,14 +4,16 @@ using CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CodeAcademy.CoreWebApi.Migrations
 {
     [DbContext(typeof(AppIdentityDbContext))]
-    partial class AppIdentityDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180926094231_LikeCommentIdAdded")]
+    partial class LikeCommentIdAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -369,6 +371,8 @@ namespace CodeAcademy.CoreWebApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<string>("AppIdentityUserId");
+
                     b.Property<int>("GroupId");
 
                     b.Property<string>("MentorId");
@@ -598,7 +602,7 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
                     b.Property<int?>("CertificateId");
 
-                    b.Property<int?>("GroupId");
+                    b.Property<int>("GroupId");
 
                     b.Property<bool>("IsMentor");
 
@@ -915,7 +919,8 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
                     b.HasOne("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.Group", "Group")
                         .WithMany("Students")
-                        .HasForeignKey("GroupId");
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.LessonStatus", "LessonStatus")
                         .WithMany("Students")

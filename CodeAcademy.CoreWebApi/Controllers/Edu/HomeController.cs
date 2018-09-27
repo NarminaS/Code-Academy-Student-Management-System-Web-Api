@@ -18,9 +18,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 
-namespace CodeAcademy.CoreWebApi.Controllers.Student
+namespace CodeAcademy.CoreWebApi.Controllers.Edu    
 {
-
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class HomeController : ControllerBase
@@ -86,10 +86,8 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
                 {
                     HeadText = model.HeadText,
                     Text = model.Text,
-                    AppIdentityUser = await _auth.FindUserById("fff5ec56-f16a-4bd8-a01e-2dbd8ccba678"),
-                    FacultyId = 1,
-                    //AppIdentityUser =  this.GetLoggedUser(_auth, _context),
-                    //FacultyId =  this.GetLoggedUser(_auth, _context).FacultyId ?? default(int),
+                    AppIdentityUser =  this.GetLoggedUser(_auth, _context),
+                    FacultyId =  this.GetLoggedUser(_auth, _context).FacultyId ?? default(int),
                 };
 
                 List<PostTag> artTags = new List<PostTag>();
@@ -162,28 +160,61 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
 
         [HttpPost]
         [Route("deletearticle")]
-        public async Task<IActionResult> DeleteArticle([FromForm] ArticleModel model)
+        public async Task<IActionResult> DeleteArticle([FromBody] PostDeleteModel model)
         {
-            AppIdentityUser currentuser = this.GetLoggedUser(_auth, _context);
-            if (currentuser != null)
+            if (this.ValidRoleForAction(_context, _auth, new string[] { "Student", "Teacher", "Editor" }))
             {
+                AppIdentityUser currentuser = this.GetLoggedUser(_auth, _context);
                 if (ModelState.IsValid)
                 {
-                    Article item = await _context.GetByIdAsync<Article>(x => x.Id == model.Id);
-                    if (item != null)
+                    if (model.PostUserId == currentuser.Id || await _auth.CheckUserRole(currentuser, "Editor"))
                     {
-                        _context.Delete(item);
-                        bool result = _context.SaveAll();
+                        Article item = await _context.GetByIdAsync<Article>(x => x.Id == model.PostId);
+                        if (item != null)
+                        {
+                            _context.Delete(item);
+                            bool result = _context.SaveAll();
 
-                        if (result == true)
-                            return Ok(item);
+                            if (result == true)
+                                return Ok(item);
+                            else
+                                return BadRequest("Model cannot be deleted");
+                        }
                         else
-                            return BadRequest("Model cannot be  deleted");
+                        {
+                            return NotFound("Model not found");
+                        }
                     }
-                    else
+                    return BadRequest($"{currentuser.Name}, you don't have a permission");
+                }
+                return BadRequest("Model is not valid");
+            }
+            return Forbid();
+        }
+
+        [HttpPost]
+        [Route("approvearticle")]
+        public async Task<IActionResult> ApproveArticle([FromBody] PostApproveModel model)
+        {
+            if (this.ValidRoleForAction(_context, _auth, new string[] { "Teacher" }))
+            {
+                Teacher current = this.GetLoggedUser(_auth, _context) as Teacher;
+                if (ModelState.IsValid)
+                {
+                    Article article = await _context.GetByIdAsync<Article>(x => x.Id == model.PostId);
+                    if (article != null && article.IsApproved == false)
                     {
-                        return NotFound("Model not found");
+                        article.IsApproved = true;
+                        _context.Update(article);
+                        if (_context.SaveAll())
+                        {
+                            AppIdentityUser author = await _auth.FindUserById(model.PostAuthorId);
+                            author.Point += 20;
+                            await _auth.UpdateUser(author);
+                            return Ok(new SuccesApproveModel(current));
+                        }
                     }
+                    return NotFound("Article not found or is already approved");
                 }
                 return BadRequest("Model is not valid");
             }
@@ -204,6 +235,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
             else
                 return NotFound("No articles in database");
         }
+
 
         [HttpPost]
         [Route("addlink")]
@@ -249,7 +281,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
             return BadRequest("Model is not valid");
         }
 
-        [Authorize]
+
         [HttpPost]
         [Route("updatelink")]
         public async Task<IActionResult> UpdateLink([FromForm] LinkModel model)
@@ -307,20 +339,20 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
             return Unauthorized();
         }
 
-        [Authorize]
+
         [HttpPost]
         [Route("deletelink")]
-        public async Task<IActionResult> DeleteLink([FromForm] LinkModel model)
+        public async Task<IActionResult> DeleteLink([FromBody] PostDeleteModel model)
         {
             if (this.ValidRoleForAction(_context, _auth, new string[] { "Student", "Teacher", "Editor" }))
             {   
                 AppIdentityUser currentuser = this.GetLoggedUser(_auth, _context);
 
-                if (model.UserId == currentuser.Id || await _auth.CheckUserRole(currentuser, "Editor"))
+                if (model.PostUserId == currentuser.Id || await _auth.CheckUserRole(currentuser, "Editor"))
                 {
                     if (ModelState.IsValid)
                     {
-                        Link item = await _context.GetByIdAsync<Link>(x => x.Id == model.Id);
+                        Link item = await _context.GetByIdAsync<Link>(x => x.Id == model.PostId);
                         if (item != null)
                         {
                             _context.Delete(item);
@@ -359,6 +391,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
                 return NotFound("No articles in database");
         }
 
+
         [HttpPost]
         [Route("addquestion")]
         public async Task<IActionResult> AddQuestion([FromForm] QuestionModel model)
@@ -375,10 +408,8 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
 
                 Question item = new Question
                 {
-                    AppIdentityUser = await _auth.FindUserById("fff5ec56-f16a-4bd8-a01e-2dbd8ccba678"),
-                    FacultyId = 1,
-                    //AppIdentityUser =  this.GetLoggedUser(_auth, _context),
-                    //FacultyId =  this.GetLoggedUser(_auth, _context).FacultyId ?? default(int),
+                    AppIdentityUser = this.GetLoggedUser(_auth, _context),
+                    FacultyId =  this.GetLoggedUser(_auth, _context).FacultyId ?? default(int),
                     HeadText = model.HeadText,
                     Text = model.Text
                 };
@@ -388,11 +419,11 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
                     PhotoUploadCloudinary upload = new PhotoUploadCloudinary(_cloudinaryConfig);
                     Photo photo = upload.Upload(model.Photo);
                     await _context.Add(photo);
-                    if(_context.SaveAll())
+                    if (_context.SaveAll())
                     {
                         item.Photo = photo;
                         item.PhotoId = photo.Id;
-                    }                    
+                    }
                 }
 
                 List<PostTag> tagPosts = new List<PostTag>();
@@ -406,19 +437,232 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
                 await _context.Add(item);
 
                 bool saved = _context.SaveAll();
-                try
+                if (saved == true)
                 {
-                    if (saved == true)
-                    {
-                        return Ok(new QuestionViewModel(item));
-                    }
-                }
-                catch (Exception ex)
-                {
-                   //...
+                    QuestionViewModel viewModel = new QuestionViewModel(item);
+                    if (item.Photo != null)
+                        viewModel.Photo = item.Photo.Url;
+                    return Ok(viewModel);
                 }
             }
             return Ok();
+        }
+
+        [HttpPost]
+        [Route("updatequestion")]
+        public async Task<IActionResult> UpdateQuestion([FromForm] QuestionModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                string[] tags = model.Tags.Split(',');
+                List<Tag> questionTags = new List<Tag>();
+                foreach (var tag in tags)
+                {
+                    Tag t = await _context.GetByNameAsync<Tag>(x => x.Name.ToLower() == tag.Trim().ToLower());
+                    questionTags.Add(t);
+                }
+
+                Question item = await _context.GetQuestion(model.Id);
+
+                item.HeadText = model.HeadText;
+                item.Text = model.Text;
+
+                if (model.Photo != null)
+                {
+                    PhotoUploadCloudinary upload = new PhotoUploadCloudinary(_cloudinaryConfig);
+                    Photo photo = upload.Upload(model.Photo);
+                    await _context.Add(photo);
+                    if (_context.SaveAll())
+                    {
+                        item.Photo = photo;
+                        item.PhotoId = photo.Id;
+                    }
+                }
+
+                if (model.Photo == null && item.Photo != null)
+                {
+                    item.Photo = null;
+                }
+
+                List<PostTag> newTagPosts = new List<PostTag>();
+                foreach (var tag in questionTags)
+                {
+                    newTagPosts.Add(new PostTag() { Post = item, Tag = tag });
+                }
+
+                List<PostTag> oldTagPosts = await _context.GetPostTags(item);
+
+                foreach (var tp in oldTagPosts)
+                {
+                    _context.Delete(tp);
+                }
+
+                item.PostTags = newTagPosts;
+
+                _context.Update(item);
+                bool saved = _context.SaveAll();
+                if (saved == true)
+                {
+                    QuestionViewModel viewModel = new QuestionViewModel(item);
+                    if (item.Photo != null)
+                        viewModel.Photo = item.Photo.Url;
+                    return Ok(viewModel);
+                }
+                else
+                {
+                    return BadRequest("Item cannot be updated");
+                }
+            }
+            return BadRequest("Model is not valid");
+        }
+
+
+        [HttpPost]
+        [Route("deletequestion")]
+        public async Task<IActionResult> DeleteQuestion([FromBody] PostDeleteModel model)
+        {
+            if (this.ValidRoleForAction(_context, _auth, new string[] { "Student", "Teacher", "Editor" }))
+            {
+                AppIdentityUser currentuser = this.GetLoggedUser(_auth, _context);
+                if (ModelState.IsValid)
+                {
+                    if (model.PostUserId == currentuser.Id || await _auth.CheckUserRole(currentuser, "Editor"))
+                    {
+                        Question item = await _context.GetByIdAsync<Question>(x => x.Id == model.PostId);
+                        if (item != null)
+                        {
+                            _context.Delete(item);
+                            bool result = _context.SaveAll();
+
+                            if (result == true)
+                                return Ok(item);
+                            else
+                                return BadRequest("Model cannot be deleted");
+                        }
+                        else
+                        {
+                            return NotFound("Model not found");
+                        }
+                    }
+                    return BadRequest($"{currentuser.Name}, you don't have a permission");
+                }
+                return BadRequest("Model is not valid");
+            }
+            return Forbid();
+        }
+
+        [HttpGet]
+        [Route("getallquestions")]
+        public async Task<IActionResult> GetAllQuestions()
+        {
+            List<Question> questions = await _context.GetAllQuestions();
+            List<QuestionViewModel> questionViewModels = new List<QuestionViewModel>();
+            foreach (var q in questions)
+            {
+                if (q.Photo!=null)
+                {
+                    QuestionViewModel viewModel1 = new QuestionViewModel(q) { Photo = q.Photo.Url };
+                    questionViewModels.Add(viewModel1);
+                }
+                QuestionViewModel viewModel = new QuestionViewModel(q);
+                questionViewModels.Add(viewModel);
+            }
+
+            //Filter by faculty
+            //List<ArticleViewModel> filtered = articleViewModels.Where(x => x.FacultyId == this.GetLoggedUser(_auth, _context).FacultyId).ToList();
+
+            if (questionViewModels.Count > 0)
+                return Ok(questionViewModels);
+            else
+                return NotFound("No articles in database");
+        }
+
+        [HttpPost]
+        [Route("likepost")]
+        public async Task<IActionResult> LikePost([FromBody] LikeModel model)
+        {
+            if (this.ValidRoleForAction(_context, _auth, new string[] { "Student", "Teacher", "Editor" , "Admin" }))
+            {
+                AppIdentityUser current = this.GetLoggedUser(_auth, _context);
+                if (ModelState.IsValid)
+                {
+                    Post postToLike = await _context.GetPost(model.PostId);
+
+                    if (model.PostUserId == current.Id)
+                    {
+                        return BadRequest("You can't like your own post");
+                    }
+
+                    if (await _context.GetLike(model.PostId, current.Id) == null && postToLike != null)
+                    {
+                        Like likeToAdd = new Like
+                        {
+                            AppIdentityUser = current,
+                            Post = postToLike
+                        };
+
+                        await _context.Add(likeToAdd);
+                        bool saved = _context.SaveAll();
+                        if (saved == true)
+                            return Ok(postToLike.Likes.Count);
+                        else
+                            return BadRequest("Error adding like to post");
+                    }
+
+                    Like likeToDelete = await _context.GetLike(model.PostId, current.Id);
+                    if (likeToDelete != null)
+                    {
+                        _context.Delete(likeToDelete);
+                        bool saved = _context.SaveAll();
+                        if (saved == true)
+                            return Ok(postToLike.Likes.Count);
+                        else
+                            return BadRequest("Error disliking the post");
+                    }
+                }
+                return BadRequest("Model is not valid");
+            }
+            return Forbid();
+        }
+
+        [HttpPost]
+        [Route("addcomment")]
+        public async Task<IActionResult> AddComment([FromForm] CommentModel model)
+        {
+            if (this.ValidRoleForAction(_context, _auth, new string[] { "Student", "Teacher", "Editor", "Admin" }))
+            {
+                if (ModelState.IsValid)
+                {
+                    AppIdentityUser current = this.GetLoggedUser(_auth, _context);
+                    Question question = await _context.GetQuestion(model.PostId);
+                    if (question != null)
+                    {
+                        Comment item = new Comment
+                        {
+                            Post = question,
+                            Text = model.Text,
+                            User = current
+                        };
+
+                        await _context.Add(item);
+
+                        bool saved = _context.SaveAll();
+                        if (saved == true)
+                        {
+                            CommentViewModel viewModel = new CommentViewModel(item);
+                            if (current.UserType == "Student")
+                            {
+                                viewModel.GroupName = _context.GetUserGroup(current.Id);
+                            }
+                            return Ok(viewModel);
+                        }
+                        return BadRequest("Error adding comment");
+                    }
+                    return NotFound("Question not found!");
+                }
+                return BadRequest("Model is not valid");
+            }
+            return Forbid();
         }
     }
 }

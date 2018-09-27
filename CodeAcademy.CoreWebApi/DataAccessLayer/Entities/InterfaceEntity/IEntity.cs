@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace CodeAcademy.CoreWebApi.Entities.InterfaceEntity
 {
-    interface IEntity
+    public interface IEntity
     {
     }
 }

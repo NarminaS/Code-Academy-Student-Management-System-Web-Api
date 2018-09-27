@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 
 namespace CodeAcademy.CoreWebApi.DataTransferObject
 {
-    public class UserRegisterModel
+    public class TagFilterModel
     {
+        public int TagId { get; set; }  
     }
 }

@@ -18,19 +18,14 @@ namespace CodeAcademy.CoreWebApi.ViewModels
             this.UserName = question.AppIdentityUser.Name;
             this.UserSurname = question.AppIdentityUser.Surname;
             this.UserPhoto = question.AppIdentityUser.Photo.Url;
+            this.UserType = question.AppIdentityUser.UserType;
             this.LikeCount = question.Likes.Count;
             this.HeadText = question.HeadText;
             this.Text = question.Text;
-            this.Photo = question.Photo.Url ?? null;
             this.FacultyId = question.FacultyId;
             this.PostType = question.PostType;
             this.DateAdded = question.DateAdded;
         }
-
-        public string UserPhoto { get; set; }
-
-        public int Id { get; set; }
-
         public string HeadText { get; set; }
 
         public string Text { get; set; }

@@ -11,6 +11,7 @@ namespace CodeAcademy.CoreWebApi.ViewModels
     {
         public LinkViewModel(Link link)
         {
+            this.Id = link.Id;
             this.DateAdded = link.DateAdded;
             this.LikeCount = link.Likes.Count;
             this.Tags = this.Tags = link.PostTags.Select(x => new TagModel { Id = x.TagId, Name = x.Tag.Name }).ToList();
@@ -18,13 +19,12 @@ namespace CodeAcademy.CoreWebApi.ViewModels
             this.UserName = link.AppIdentityUser.Name;
             this.UserSurname = link.AppIdentityUser.Surname;
             this.UserPhoto = link.AppIdentityUser.Photo.Url;
+            this.UserType = link.AppIdentityUser.UserType;
             this.HeadText = link.HeadText;
             this.LinkUrl = link.LinkUrl;
             this.FacultyId = link.FacultyId;
             this.PostType = link.PostType;
         }
-
-        public string UserPhoto { get; set; }
 
         public string HeadText { get; set; }
 

@@ -18,9 +18,12 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.Entities
         }
 
         public string AppIdentityUserId { get; set; }
-        public AppIdentityUser UserId { get; set; }
+        public AppIdentityUser AppIdentityUser { get; set; }    
 
-        public int PostId { get; set; }
+        public int? PostId { get; set; }
         public Post Post { get; set; }
+
+        public int? CommentId { get; set; }
+        public Comment Comment { get; set; }    
     }
 }

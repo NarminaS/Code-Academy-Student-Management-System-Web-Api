@@ -22,13 +22,14 @@ namespace CodeAcademy.CoreWebApi.ViewModels
             this.UserId = book.AppIdentityUser.Id;
             this.UserName = book.AppIdentityUser.Name;
             this.UserSurname = book.AppIdentityUser.Surname;
+            this.UserPhoto = book.AppIdentityUser.Photo.Url;
+            this.UserType = book.AppIdentityUser.UserType;
             this.Tags = book.PostTags.Select(x => new TagModel { Id = x.TagId, Name = x.Tag.Name }).ToList();
             this.LikeCount = book.Likes.Count;
             this.DateAdded = book.DateAdded;
             this.FacultyId = book.FacultyId;
             this.PostType = book.PostType;
         }
-        public int Id { get; set; }
 
         public string Name { get; set; }
 

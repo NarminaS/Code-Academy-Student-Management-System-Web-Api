@@ -10,12 +10,14 @@ using CodeAcademy.CoreWebApi.Entities;
 using CodeAcademy.CoreWebApi.Helpers;
 using CodeAcademy.CoreWebApi.Helpers.Extensions;
 using CodeAcademy.CoreWebApi.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-namespace CodeAcademy.CoreWebApi.Controllers.Student
+namespace CodeAcademy.CoreWebApi.Controllers.Edu    
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class BooksController : ControllerBase
@@ -65,8 +67,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
                 Book item = new Book
                 {
                     Name = model.Name,
-                    AppIdentityUser = await _auth.FindUserById("fff5ec56-f16a-4bd8-a01e-2dbd8ccba678"),
-                    //User = await this.GetLoggedUser(_auth, _context),
+                    AppIdentityUser = this.GetLoggedUser(_auth, _context),
                     Photo = photo,
                     File = file,
                     Author = model.Author,
@@ -133,15 +134,6 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
         [Route("update")]
         public async Task<IActionResult> Update([FromForm] BookModel model)
         {
-            //AppIdentityUser current = this.GetLoggedUser(_auth, _context);
-            //if (model.UserId==current.Id || await _auth.CheckUserRole(current,"Editor"))
-            //{
-            //    //Copy edit code here...
-            //}
-            //else
-            //{
-            //    return Forbid("You dont't have a permission");
-            //}
             bool saved;
             if (ModelState.IsValid)
             {
@@ -243,5 +235,91 @@ namespace CodeAcademy.CoreWebApi.Controllers.Student
                 return NotFound("No book was found");
         }
 
+        [HttpPost]
+        [Route("getbytag")]
+        public async Task<IActionResult> FilterBooksByTag([FromBody] TagFilterModel model)
+        {
+            if (this.ValidRoleForAction(_context, _auth, new string[] { "Student", "Teacher", "Editor", "Admin" }))
+            {
+                if (ModelState.IsValid)
+                {
+                    List<Book> books = await _context.GetAllBooks();
+                    List<Book> filtered = new List<Book>();
+                    foreach (var book in books)
+                    {
+                        foreach (var pt in await _context.GetPostTags(book))
+                        {
+                            if (pt.PostId == book.Id && pt.TagId == model.TagId)
+                            {
+                                filtered.Add(book);
+                            }
+                        }
+                    }
+                    if (filtered.Count > 0)
+                    {
+                        return Ok(filtered.Select(x=>new BookViewModel(x)));
+                    }
+                    return NotFound("No books with this tag were found");
+                }
+                return BadRequest("Model is not valid");
+            }
+            return Forbid();
+        }   
+
+        [HttpPost]
+        [Route("approve")]
+        public async Task<IActionResult> ApproveBook([FromBody] PostApproveModel model)
+        {
+            if (this.ValidRoleForAction(_context, _auth, new string[] { "Teacher" }))
+            {
+                Teacher current = this.GetLoggedUser(_auth, _context) as Teacher;
+                if (ModelState.IsValid)
+                {
+                    Book book = await _context.GetByIdAsync<Book>(x => x.Id == model.PostId);
+                    if (book != null && book.IsApproved == false)
+                    {
+                        book.IsApproved = true;
+                        _context.Update(book);
+                        if (_context.SaveAll())
+                        {
+                            AppIdentityUser author = await _auth.FindUserById(model.PostAuthorId);
+                            author.Point += 15;
+                            await _auth.UpdateUser(author);
+                            return Ok(new SuccesApproveModel(current));
+                        }
+                        return BadRequest("Error approving book");
+                    }
+                    return NotFound("Book not found or is already approved");
+                }
+                return BadRequest("Model is not valid");
+            }
+            return Forbid();
+        }
+
+        [HttpPost]
+        [Route("disapprove")]
+        public async Task<IActionResult> DisapproveBook([FromBody]PostApproveModel model)
+        {
+            if (this.ValidRoleForAction(_context, _auth, new string[] { "Teacher" }))
+            {
+                Teacher current = this.GetLoggedUser(_auth, _context) as Teacher;
+                if (ModelState.IsValid)
+                {
+                    Book book = await _context.GetByIdAsync<Book>(x => x.Id == model.PostId);
+                    if (book != null && book.IsApproved == false)
+                    {
+                        _context.Delete(book);
+                        if (_context.SaveAll())
+                        {
+                            return Ok($"The book has been deleted by {current.Name} {current.Surname}");
+                        }
+                        return BadRequest("Error disapproving book");
+                    }
+                    return NotFound("Book not found or is already approved");
+                }
+                return BadRequest("Model is not valid");
+            }
+            return Forbid();
+        }
     }
 }

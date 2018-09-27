@@ -11,7 +11,7 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.Entities
         public string HeadText { get; set; }
         public string Text { get; set; }
 
-        public int PhotoId { get; set; }
+        public int? PhotoId { get; set; }
         public Photo Photo { get; set; }
 
         public Question()
@@ -20,5 +20,9 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.Entities
         }
         public List<Comment> Comments { get; set; }
 
+        public static implicit operator List<object>(Question v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

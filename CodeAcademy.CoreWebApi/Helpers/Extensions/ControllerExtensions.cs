@@ -54,6 +54,8 @@ namespace CodeAcademy.CoreWebApi.Helpers.Extensions
                 {
                     Teacher teacher = appRepo.GetByIdAsync<Teacher>(x => x.Id == user.Id).Result;
                     Photo userPhoto = appRepo.GetPhoto(user.PhotoId);
+                    Faculty faculty = appRepo.GetByIdAsync<Faculty>(x => x.Id == teacher.FacultyId).Result;
+                    teacher.Faculty = faculty;
                     teacher.Photo = userPhoto;
                     return teacher;
                 }

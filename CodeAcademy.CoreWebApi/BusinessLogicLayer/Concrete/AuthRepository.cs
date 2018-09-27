@@ -1,7 +1,9 @@
 ﻿using CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract;
 using CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity;
+using CodeAcademy.CoreWebApi.DataAccessLayer.Entities;
 using CodeAcademy.CoreWebApi.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -204,7 +206,8 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
 
         public AppIdentityUser GetUserFromToken(string token)
         {
-           AppIdentityUser user =  _context.Users.Where(x=>x.LoginToken==token).FirstOrDefault();
+           AppIdentityUser user = _context.Users.Include(x=>x.Photo)
+                                                        .Where(x=>x.LoginToken==token).FirstOrDefault();
            return user;
         }
     }

@@ -4,14 +4,16 @@ using CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CodeAcademy.CoreWebApi.Migrations
 {
     [DbContext(typeof(AppIdentityDbContext))]
-    partial class AppIdentityDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180926064852_QuestionPhotoNull")]
+    partial class QuestionPhotoNull
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -350,7 +352,7 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
                     b.Property<DateTime>("DateAdded");
 
-                    b.Property<int?>("PostId");
+                    b.Property<int>("PostId");
 
                     b.HasKey("Id");
 
@@ -368,6 +370,8 @@ namespace CodeAcademy.CoreWebApi.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("AppIdentityUserId");
 
                     b.Property<int>("GroupId");
 
@@ -598,7 +602,7 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
                     b.Property<int?>("CertificateId");
 
-                    b.Property<int?>("GroupId");
+                    b.Property<int>("GroupId");
 
                     b.Property<bool>("IsMentor");
 
@@ -792,17 +796,18 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
             modelBuilder.Entity("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.Like", b =>
                 {
-                    b.HasOne("CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity.AppIdentityUser", "AppIdentityUser")
+                    b.HasOne("CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity.AppIdentityUser", "UserId")
                         .WithMany("Likes")
                         .HasForeignKey("AppIdentityUserId");
 
-                    b.HasOne("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.Comment", "Comment")
+                    b.HasOne("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.Comment")
                         .WithMany("Likes")
                         .HasForeignKey("CommentId");
 
                     b.HasOne("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.Post", "Post")
                         .WithMany("Likes")
-                        .HasForeignKey("PostId");
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.MentorGroup", b =>
@@ -915,7 +920,8 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
                     b.HasOne("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.Group", "Group")
                         .WithMany("Students")
-                        .HasForeignKey("GroupId");
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("CodeAcademy.CoreWebApi.DataAccessLayer.Entities.LessonStatus", "LessonStatus")
                         .WithMany("Students")

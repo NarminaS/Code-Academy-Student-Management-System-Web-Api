@@ -9,7 +9,6 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.Entities
     {
         public int Id { get; set; }
 
-        public string  AppIdentityUserId { get; set; }
         public Student Mentor { get; set; }
 
         public int GroupId { get; set; }
