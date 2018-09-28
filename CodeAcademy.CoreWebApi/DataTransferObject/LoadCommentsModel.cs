@@ -6,16 +6,9 @@ using System.Threading.Tasks;
 
 namespace CodeAcademy.CoreWebApi.DataTransferObject
 {
-    public class CommentModel
+    public class LoadCommentsModel
     {
-        public int Id { get; set; }
-
         [Required]
-        public int PostId { get; set; }
-
-        public string CommentUserId { get; set; }   
-
-        [Required]
-        public string Text { get; set; }
+        public int PostId { get; set; } 
     }
 }

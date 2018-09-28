@@ -26,7 +26,8 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract
         Photo GetPhoto(int photoId);
         Task<Question> GetQuestion(int questionId);
         Task<Post> GetPost(int postId);
-        Task<Like> GetLike(int postId, string userId);
+        Task<Like> GetPostLike(int postId, string userId);
+        Task<Like> GetCommentLike(int commentId, string userId);
         Task<List<Group>> GetAllGroups();
         string GetUserGroup(string id);
         Task<List<Book>> GetAllBooks();
@@ -45,5 +46,7 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract
         Task<List<LessonHour>> GetLessonHoursAsync();
         Task<List<Post>> FilterPosts(int facultyId, int tagId, string postType);
         Task<List<Book>> FilterBooks(int facultyId, int laguageId, int tagId);
+        Task<List<Comment>> GetComments(int postId);
+        Task<Comment> GetComment(int id);
     }
 }

@@ -77,8 +77,7 @@ namespace CodeAcademy.CoreWebApi.Helpers.Extensions
 
                 if (isValid == true)
                     return true;
-            }
-           
+            }        
             return false;
         }
     }

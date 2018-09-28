@@ -23,5 +23,7 @@ namespace CodeAcademy.CoreWebApi.DataTransferObject
 
         [Required]
         public string Tags { get; set; }
+
+        public string UserId { get; set; }  
     }
 }

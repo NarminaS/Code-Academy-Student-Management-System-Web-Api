@@ -46,5 +46,6 @@ namespace CodeAcademy.CoreWebApi.DataTransferObject
 
         [Required]
         public string Tags { get; set; }
+
     }
 }

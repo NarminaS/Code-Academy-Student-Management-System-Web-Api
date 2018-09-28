@@ -166,7 +166,7 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
             return post;
         }
 
-        public async Task<Like> GetLike(int postId, string userId)
+        public async Task<Like> GetPostLike(int postId, string userId)
         {
             Like like = await _context.Likes.FirstOrDefaultAsync(x => x.PostId == postId && x.AppIdentityUserId == userId);
             return like;
@@ -213,13 +213,13 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
                 }
                 posts = filteredByTag;
             }
+
             if (postType != String.Empty)
             {
                 posts = posts.Where(x => x.PostType == postType).ToList();
             }
 
             return posts;
-
         }
 
         public async Task<List<Book>> FilterBooks(int facultyId, int languageId, int tagId)    
@@ -251,6 +251,7 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
             {
                 books = books.Where(x => x.LanguageId == languageId).ToList();
             }
+
             return books;
         }
 
@@ -268,6 +269,29 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
                 return tags;
             }
             return await _context.Tags.Include(x => x.PostTags).ToListAsync();
+        }
+
+        public async Task<List<Comment>> GetComments(int postId)
+        {
+            List<Comment> comments = await _context.Comments
+                                                 .Include(x => x.User).ThenInclude(x => x.Photo)
+                                                 .Include(x => x.Likes)
+                                                                     .Where(x => x.PostId == postId).ToListAsync();
+            return comments;
+        }
+
+        public async Task<Comment> GetComment(int id)
+        {
+            Comment comment = await _context.Comments
+                                                    .Include(x => x.Likes)
+                                                            .FirstOrDefaultAsync(x => x.Id == id);
+            return comment;
+        }
+
+        public async Task<Like> GetCommentLike(int commentId, string userId)
+        {
+            Like like = await _context.Likes.FirstOrDefaultAsync(x => x.CommentId == commentId && x.AppIdentityUserId == userId);
+            return like;
         }
     }
 }

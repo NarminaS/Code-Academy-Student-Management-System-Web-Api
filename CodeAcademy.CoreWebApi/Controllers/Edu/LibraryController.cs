@@ -30,25 +30,43 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
         [Route("filter")]
         public async Task<IActionResult> Filter([FromForm] FilterModel model)
         {
-            int _facultyId = this.GetLoggedUser(_auth, _context).FacultyId ?? default(int);
-
-            string PostType = model.PostType ?? String.Empty;
-            int LanguageId = model.LanguageId ?? default(int);
-            int TagId = model.TagId ?? default(int);
-            int FacultyId = model.FacultyId ?? _facultyId;
-
-            if (model.LanguageId != null)
+            if (this.ValidRoleForAction(_context, _auth, new string[] { "Student", "Teacher", "Editor", "Admin" }))
             {
-                List<Book> books = await _context.FilterBooks(FacultyId, LanguageId, TagId);
-                return Ok(books.Select(x=>new BookViewModel(x)));
-            }
+                int _facultyId = this.GetLoggedUser(_auth, _context).FacultyId ?? default(int);
 
-            List<Post> posts = await _context.FilterPosts(FacultyId, TagId, PostType);
-            var result = FilteredViewModel(posts);
-            return Ok(result);
+                string PostType = model.PostType ?? String.Empty;
+                int LanguageId = model.LanguageId ?? default(int);
+                int TagId = model.TagId ?? default(int);
+                int FacultyId = model.FacultyId ?? _facultyId;
+
+                if (model.LanguageId != null)
+                {
+                    List<Book> books = await _context.FilterBooks(FacultyId, LanguageId, TagId);
+                    return Ok(books.Select(x => new BookViewModel(x)));
+                }
+
+                List<Post> posts = await _context.FilterPosts(FacultyId, TagId, PostType);
+                List<PostViewModel> result = GenerateViewModel(posts);
+                return Ok(result.OrderByDescending(x => x.LikeCount).ToList());
+            }
+            return Forbid();
         }
 
-        private List<PostViewModel> FilteredViewModel(List<Post> posts)
+
+        [HttpGet]
+        [Route("tagcloud")]
+        public async Task<IActionResult> ShowTagCloud()
+        {
+            if (this.ValidRoleForAction(_context, _auth, new string[] { "Student", "Teacher", "Editor", "Admin" }))
+            {
+                int facultyId = this.GetLoggedUser(_auth, _context).FacultyId ?? default(int);
+                var tags = await _context.GetTagsByFaculty(facultyId);
+                return Ok(tags.Select(x => new LibraryTagViewModel(x)));
+            }
+            return Forbid();
+        }
+
+        private List<PostViewModel> GenerateViewModel(List<Post> posts)
         {
             List<PostViewModel> postViewModels = new List<PostViewModel>();
 
@@ -63,15 +81,15 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                 {
                     case "Article":
                         articleViewModels.Add(new ArticleViewModel(post as Article));
-                            break;
+                        break;
                     case "Question":
-                             Question q = post as Question;
-                             QuestionViewModel viewModel = new QuestionViewModel(q);
-                            if (q.Photo != null)
-                            {
-                                viewModel.Photo = q.Photo.Url;
-                            }
-                            questionViewModels.Add(viewModel);
+                        Question q = post as Question;
+                        QuestionViewModel viewModel = new QuestionViewModel(q);
+                        if (q.Photo != null)
+                        {
+                            viewModel.Photo = q.Photo.Url;
+                        }
+                        questionViewModels.Add(viewModel);
                         break;
                     case "Link":
                         linkViewModels.Add(new LinkViewModel(post as Link));
@@ -98,15 +116,6 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
             }
 
             return postViewModels;
-        }
-
-        [HttpGet]
-        [Route("tagcloud")]
-        public async Task<IActionResult> ShowTagCloud()
-        {
-            int facultyId =  this.GetLoggedUser(_auth, _context).FacultyId ?? default(int);
-            var tags = await _context.GetTagsByFaculty(facultyId);
-            return Ok(tags.Select(x=>new LibraryTagViewModel(x)));
         }
     }
 }

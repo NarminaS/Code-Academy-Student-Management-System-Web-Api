@@ -13,5 +13,8 @@ namespace CodeAcademy.CoreWebApi.DataTransferObject
 
         [Required]
         public string PostUserId { get; set; }  
+
+        [Required]
+        public bool IsLiked { get; set; }    
     }
 }
