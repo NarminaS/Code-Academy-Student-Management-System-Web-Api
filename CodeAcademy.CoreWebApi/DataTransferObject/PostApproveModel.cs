@@ -9,6 +9,8 @@ namespace CodeAcademy.CoreWebApi.DataTransferObject
     {
         public int PostId { get; set; }
 
-        public string PostAuthorId { get; set; } 
+        public string PostAuthorId { get; set; }
+
+        public string Reason { get; set; }  
     }
 }

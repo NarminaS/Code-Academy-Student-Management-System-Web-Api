@@ -90,6 +90,9 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                     await _context.Add(photo);
                     await _context.Add(item);
 
+                    var broadcast = new Notifier(_context, _auth);
+                    await _context.AddRange(await broadcast.NewBook(item));
+
                     saved = _context.SaveAll();
                     if (saved == true)
                     {
@@ -299,6 +302,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
             if (this.ValidRoleForAction(_context, _auth, new string[] { "Teacher" }))
             {
                 Teacher current = this.GetLoggedUser(_auth, _context) as Teacher;
+                AppIdentityUser author = await _auth.FindUserById(model.PostAuthorId);
                 if (ModelState.IsValid)
                 {
                     Book book = await _context.GetByIdAsync<Book>(x => x.Id == model.PostId);
@@ -306,9 +310,11 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                     {
                         book.IsApproved = true;
                         _context.Update(book);
+
+                        await _context.Add(new Notifier(_context, _auth).Approved(book, current));
+
                         if (_context.SaveAll())
                         {
-                            AppIdentityUser author = await _auth.FindUserById(model.PostAuthorId);
                             author.Point += 15;
                             await _auth.UpdateUser(author);
                             return Ok(new SuccesApproveModel(current));
@@ -329,12 +335,16 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
             if (this.ValidRoleForAction(_context, _auth, new string[] { "Teacher" }))
             {
                 Teacher current = this.GetLoggedUser(_auth, _context) as Teacher;
+                AppIdentityUser author = await _auth.FindUserById(model.PostAuthorId);
                 if (ModelState.IsValid)
                 {
                     Book book = await _context.GetByIdAsync<Book>(x => x.Id == model.PostId);
                     if (book != null && book.IsApproved == false)
                     {
                         _context.Delete(book);
+
+                        await _context.Add(new Notifier(_context, _auth).Disapproved(book, current, model.Reason));
+
                         if (_context.SaveAll())
                         {
                             return Ok($"The book has been deleted by {current.Name} {current.Surname}");

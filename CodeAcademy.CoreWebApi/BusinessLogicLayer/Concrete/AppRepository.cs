@@ -293,5 +293,28 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
             Like like = await _context.Likes.FirstOrDefaultAsync(x => x.CommentId == commentId && x.AppIdentityUserId == userId);
             return like;
         }
+
+        public async Task<List<Notification>> GetUnread(string userId)
+        {
+            List<Notification> unreadNotifications = await _context.Notifications
+                                                                              .Include(x => x.Sender).ThenInclude(x=>x.Photo)
+                                                                              .Where(x => x.IsVisited == false && x.Subscriber.Id == userId)
+                                                                              .ToListAsync();
+            return unreadNotifications;
+        }
+
+        public async Task AddRange<T>(List<T> range) where T : class
+        {
+            await _context.AddRangeAsync(range);
+        }
+
+        public async Task<List<Notification>> GetAllNotifications(string userId)
+        {
+            List<Notification> all = await _context.Notifications
+                                                                .Include(x => x.Sender).ThenInclude(x => x.Photo)
+                                                                .Where(x => x.Subscriber.Id == userId)
+                                                                .ToListAsync();
+            return all;
+        }
     }
 }

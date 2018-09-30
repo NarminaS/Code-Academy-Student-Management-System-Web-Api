@@ -14,6 +14,7 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract
     {
         //Gereric methods
         Task Add<T>(T entity) where T: class;
+        Task AddRange<T>(List<T> range) where T : class;
         Task<T> GetByIdAsync<T>(Expression<Func<T, bool>> predicate) where T: class;
         Task<T> GetByNameAsync<T>(Expression<Func<T, bool>> predicate) where T : class; 
 
@@ -23,12 +24,14 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract
 
         //sigle methods
         //..
+        Task<List<Notification>> GetUnread(string userId);
         Photo GetPhoto(int photoId);
         Task<Question> GetQuestion(int questionId);
         Task<Post> GetPost(int postId);
         Task<Like> GetPostLike(int postId, string userId);
         Task<Like> GetCommentLike(int commentId, string userId);
         Task<List<Group>> GetAllGroups();
+        Task<List<Notification>> GetAllNotifications(string userId);
         string GetUserGroup(string id);
         Task<List<Book>> GetAllBooks();
         Task<List<Article>> GetAllArticles();

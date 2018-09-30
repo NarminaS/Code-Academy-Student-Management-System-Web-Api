@@ -26,5 +26,7 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.Entities
 
         public int PostId { get; set; }
         public Post Post { get; set; }
+
+        public int? ParentId { get; set; }      
     }
 }

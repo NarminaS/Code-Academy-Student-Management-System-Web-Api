@@ -5,6 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Migrations\20180929082026_NotificationAdded.cs" />
+    <Compile Remove="Migrations\20180929082026_NotificationAdded.Designer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Helpers\Notification\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

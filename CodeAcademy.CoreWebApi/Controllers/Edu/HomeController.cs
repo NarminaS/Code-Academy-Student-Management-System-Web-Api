@@ -216,6 +216,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
             if (this.ValidRoleForAction(_context, _auth, new string[] { "Teacher" }))
             {
                 Teacher current = this.GetLoggedUser(_auth, _context) as Teacher;
+                AppIdentityUser author = await _auth.FindUserById(model.PostAuthorId);
                 if (ModelState.IsValid)
                 {
                     Article article = await _context.GetByIdAsync<Article>(x => x.Id == model.PostId);
@@ -223,9 +224,9 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                     {
                         article.IsApproved = true;
                         _context.Update(article);
+                        await _context.Add(new Notifier(_context, _auth).Approved(article,current));
                         if (_context.SaveAll())
                         {
-                            AppIdentityUser author = await _auth.FindUserById(model.PostAuthorId);
                             author.Point += 20;
                             await _auth.UpdateUser(author);
                             return Ok(new SuccesApproveModel(current));
@@ -654,11 +655,13 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                             {
                                 postAuthor.Point += 10;
                                 await _auth.UpdateUser(postAuthor);
+                                await _context.Add(new Notifier(_context, _auth).Like(likeToAdd, 10));
                             }
                             else
                             {
                                 postAuthor.Point += 1;
                                 await _auth.UpdateUser(postAuthor);
+                                await _context.Add(new Notifier(_context, _auth).Like(likeToAdd, 1));
                             }
 
                             bool saved = _context.SaveAll();
@@ -680,11 +683,13 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                             {
                                 postAuthor.Point -= 10;
                                 await _auth.UpdateUser(postAuthor);
+                                await _context.Add(new Notifier(_context, _auth).Dislike(likeToDelete, 10));
                             }
                             else
                             {
                                 postAuthor.Point -= 1;
                                 await _auth.UpdateUser(postAuthor);
+                                await _context.Add(new Notifier(_context, _auth).Dislike(likeToDelete, 1));
                             }
 
                             bool saved = _context.SaveAll();
@@ -721,7 +726,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                         };
 
                         await _context.Add(item);
-
+                        await _context.Add(new Notifier(_context, _auth).Comment(item));
                         bool saved = _context.SaveAll();
                         if (saved == true)
                         {
@@ -868,12 +873,15 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                                 commentAuthor.Point += 10;
                                 await _auth.UpdateUser(commentAuthor);
                                 _context.Update(commentToLike);
+                                await _context.Add(new Notifier(_context, _auth).Like(likeToAdd, 10));
                             }
                             else
                             {
                                 commentAuthor.Point += 1;
                                 await _auth.UpdateUser(commentAuthor);
+                                await _context.Add(new Notifier(_context, _auth).Like(likeToAdd, 1));
                             }
+
 
                             bool saved = _context.SaveAll();
                             if (saved == true)
@@ -896,11 +904,13 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                                 commentAuthor.Point -= 10;
                                 await _auth.UpdateUser(commentAuthor);
                                 _context.Update(commentToLike);
+                                await _context.Add(new Notifier(_context, _auth).Dislike(likeToDelete, 10));
                             }
                             else
                             {
                                 commentAuthor.Point -= 1;
                                 await _auth.UpdateUser(commentAuthor);
+                                await _context.Add(new Notifier(_context, _auth).Dislike(likeToDelete, 1));
                             }
 
                             bool saved = _context.SaveAll();

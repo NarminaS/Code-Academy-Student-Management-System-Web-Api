@@ -4,14 +4,16 @@ using CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CodeAcademy.CoreWebApi.Migrations
 {
     [DbContext(typeof(AppIdentityDbContext))]
-    partial class AppIdentityDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180929123638_NotificationAction")]
+    partial class NotificationAction
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -155,8 +157,6 @@ namespace CodeAcademy.CoreWebApi.Migrations
                     b.Property<DateTime>("DateAdded");
 
                     b.Property<bool>("IsApproved");
-
-                    b.Property<int?>("ParentId");
 
                     b.Property<int>("PostId");
 
@@ -400,11 +400,7 @@ namespace CodeAcademy.CoreWebApi.Migrations
 
                     b.Property<string>("Message");
 
-                    b.Property<int?>("Points");
-
                     b.Property<string>("SenderId");
-
-                    b.Property<string>("State");
 
                     b.Property<string>("SubscriberId");
 

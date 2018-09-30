@@ -36,6 +36,7 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity
 
         public DbSet<Like> Likes { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<Notification> Notifications { get; set; }  
         public DbSet<File> Files { get; set; }
         public DbSet<Language> Languages { get; set; }
         public DbSet<Room> Rooms { get; set; }
