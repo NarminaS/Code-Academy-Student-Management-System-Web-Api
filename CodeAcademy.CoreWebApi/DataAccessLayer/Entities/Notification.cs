@@ -31,7 +31,9 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.Entities
 
         public string Message { get; set; }
 
-        public int? Points { get; set; }    
+        public int? Point { get; set; }
+
+        public int? TotalPoints { get; set; }   
 
         public bool IsVisited { get; set; }
 

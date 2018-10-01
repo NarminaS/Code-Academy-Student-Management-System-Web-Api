@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CodeAcademy.CoreWebApi.Helpers.Attributes
 {
-    public class ImageAttribute:ValidationAttribute
+    public class ImageAttribute : ValidationAttribute
     {
         public override bool IsValid(object value)
         {
@@ -18,8 +18,8 @@ namespace CodeAcademy.CoreWebApi.Helpers.Attributes
                 {
                     return true;
                 }
-                else
-                    ErrorMessage = "The file is not in valid format";
+
+                ErrorMessage = "The file is not in valid format";
                 return false;
             }
             return true;

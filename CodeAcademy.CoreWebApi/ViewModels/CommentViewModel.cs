@@ -14,6 +14,7 @@ namespace CodeAcademy.CoreWebApi.ViewModels
             this.DateAdded = comment.DateAdded;
             this.FacultyId = comment.User.FacultyId ?? default(int);
             this.Id = comment.Id;
+            this.ParentId = comment.ParentId;
             this.Text = comment.Text;
             this.Tags = new List<TagModel>();
             this.UserId = comment.User.Id;
@@ -27,5 +28,6 @@ namespace CodeAcademy.CoreWebApi.ViewModels
 
         public string Text { get; set; }
 
+        public int? ParentId { get; set; }   
     }
 }

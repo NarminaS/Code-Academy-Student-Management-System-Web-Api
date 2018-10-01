@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CodeAcademy.CoreWebApi.Helpers
+namespace CodeAcademy.CoreWebApi.Helpers.NotifyHelpers
 {
     public static class NotificationStates
     {

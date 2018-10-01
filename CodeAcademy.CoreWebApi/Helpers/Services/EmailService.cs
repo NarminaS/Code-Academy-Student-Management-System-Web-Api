@@ -24,7 +24,7 @@ namespace CodeAcademy.CoreWebApi.Helpers.Services
 
             using (var client = new SmtpClient())
             {
-                await client.ConnectAsync("smtp.gmail.com", 25);
+                await client.ConnectAsync("smtp.gmail.com", 465, true);
                 await client.AuthenticateAsync("narmings@code.edu.az", "taurus91");
                 await client.SendAsync(emailMessage);
                 await client.DisconnectAsync(true);

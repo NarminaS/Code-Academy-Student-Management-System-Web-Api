@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CodeAcademy.CoreWebApi.Helpers.Attributes
 {
-    public class BookPdfAttribute:ValidationAttribute
+    public class BookPdfAttribute : ValidationAttribute
     {
         public override bool IsValid(object value)
         {
@@ -18,14 +18,11 @@ namespace CodeAcademy.CoreWebApi.Helpers.Attributes
                 {
                     return true;
                 }
-                else
-                    return false;
-            }
-            else
-            {
-                ErrorMessage = "Please upload a book";
                 return false;
             }
+
+            ErrorMessage = "Please upload a book";
+            return false;
         }
     }
 }

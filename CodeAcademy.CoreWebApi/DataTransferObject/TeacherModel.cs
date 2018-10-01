@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CodeAcademy.CoreWebApi.Helpers.Attributes;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -11,9 +12,11 @@ namespace CodeAcademy.CoreWebApi.DataTransferObject
         public string Id { get; set; }  
 
         [Required]
+        [PersonFullName]
         public string Name { get; set; }
 
         [Required]
+        [PersonFullName]
         public string Surname { get; set; }
 
         [Required]

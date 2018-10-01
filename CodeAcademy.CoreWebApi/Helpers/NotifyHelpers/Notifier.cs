@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CodeAcademy.CoreWebApi.Helpers
+namespace CodeAcademy.CoreWebApi.Helpers.NotifyHelpers    
 {
     public class Notifier
     {
@@ -39,6 +39,22 @@ namespace CodeAcademy.CoreWebApi.Helpers
             return broadcast;
         }
 
+        public Notification SharePost(Post post , int point)
+        {
+            Notification notification = new Notification
+            {
+                Sender = post.AppIdentityUser,
+                Subscriber = post.AppIdentityUser,
+                Point = point,
+                TotalPoints = post.AppIdentityUser.Point,
+                Type = post.PostType,
+                Action = NotificationActions.Added,
+                State = NotificationStates.Positive,
+                ContentId = post.Id
+            };
+            return notification;
+        }
+
         public Notification Approved(Post post, Teacher sender)
         {
             if (post.PostType == "Book")
@@ -51,7 +67,8 @@ namespace CodeAcademy.CoreWebApi.Helpers
                     Type = post.PostType,
                     Action = NotificationActions.Approved,
                     State = NotificationStates.Positive,
-                    Points = 20
+                    Point = 20,
+                    TotalPoints = post.AppIdentityUser.Point
                 };
                 return bookNotification;
             }
@@ -62,7 +79,9 @@ namespace CodeAcademy.CoreWebApi.Helpers
                 Subscriber = post.AppIdentityUser,
                 Type = post.PostType,
                 Action = NotificationActions.Approved,
-                State = NotificationStates.Positive
+                State = NotificationStates.Positive,
+                Point = 20,
+                TotalPoints = post.AppIdentityUser.Point
             };
             return articleNotification;
         }
@@ -88,25 +107,27 @@ namespace CodeAcademy.CoreWebApi.Helpers
             {
                 Notification postNotification = new Notification
                 {
-                    ContentId = like.Id,
+                    ContentId = like.Post.Id,
                     Sender = like.AppIdentityUser,
                     Subscriber = like.Post.AppIdentityUser,
                     Type = like.Post.PostType,
                     Action = NotificationActions.Like,
                     State = NotificationStates.Positive,
-                    Points = points
+                    Point = points,
+                    TotalPoints = like.Post.AppIdentityUser.Point
                 };
                 return postNotification;
             }
             Notification commentNotification = new Notification
             {
-                ContentId = like.Id,
+                ContentId = like.Comment.Id,
                 Sender = like.AppIdentityUser,
                 Subscriber = like.Comment.User,
                 Type = "Comment",
                 Action = NotificationActions.Like,
                 State = NotificationStates.Positive,
-                Points = points
+                Point = points,
+                TotalPoints = like.Comment.User.Point
             };
             return commentNotification;
         }
@@ -123,7 +144,8 @@ namespace CodeAcademy.CoreWebApi.Helpers
                     Type = like.Post.PostType,
                     Action = NotificationActions.Like,
                     State = NotificationStates.Negative,
-                    Points = points
+                    Point = points,
+                    TotalPoints = like.Post.AppIdentityUser.Point
                 };
                 return postNotification;
             }
@@ -135,7 +157,8 @@ namespace CodeAcademy.CoreWebApi.Helpers
                 Type = "Comment",
                 Action = NotificationActions.Like,
                 State = NotificationStates.Negative,
-                Points = points
+                Point = points,
+                TotalPoints = like.Comment.User.Point
             };
             return commentNotification;
         }
@@ -144,15 +167,33 @@ namespace CodeAcademy.CoreWebApi.Helpers
         {
             Notification notification = new Notification
             {
-                Sender = comment.Post.AppIdentityUser,
-                Subscriber = comment.User,
+                Sender = comment.User,
+                Subscriber = comment.Post.AppIdentityUser,
                 ContentId = comment.Id,
                 Type = "Comment",
                 Action = NotificationActions.Added,
-                State = NotificationStates.Positive
+                State = NotificationStates.Positive,
+                Point = 5,
+                TotalPoints = comment.User.Point
             };
             return notification;
         }
 
+        public async Task<Notification> Reply(Comment answer)
+        {
+            Comment parent = await _context.GetComment(answer.ParentId.Value);
+            Notification notification = new Notification
+            {
+                Sender = answer.User,
+                Subscriber = parent.User,
+                ContentId = answer.Id,
+                Point = 5,
+                TotalPoints = parent.User.Point,
+                Type = "Answer",
+                Action = NotificationActions.Reply,
+                State = NotificationStates.Neutral
+            };
+            return notification;
+        }   
     }
 }

@@ -24,7 +24,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Administrator
         {
             if (userId == null || code == null)
             {
-                return BadRequest("data is null");
+                return BadRequest("Data is null");
             }
 
             var user = await _context.FindUserById(userId);
@@ -34,9 +34,9 @@ namespace CodeAcademy.CoreWebApi.Controllers.Administrator
                 if (confirmed)
                     return Ok(user);
                 else
-                    return BadRequest();
+                    return BadRequest("Confirmation error");
             }
-            return BadRequest();
+            return NotFound("User not found");
         }
     }
 }

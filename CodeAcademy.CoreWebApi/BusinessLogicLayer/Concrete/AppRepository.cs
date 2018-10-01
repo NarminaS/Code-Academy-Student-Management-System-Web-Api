@@ -316,5 +316,12 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
                                                                 .ToListAsync();
             return all;
         }
+
+        public async Task<Book> GetBook(int id)
+        {
+            Book book = await _context.Books.Include(x => x.AppIdentityUser).ThenInclude(x => x.Photo)
+                                        .FirstOrDefaultAsync(x => x.Id == id);
+            return book;
+        }
     }
 }

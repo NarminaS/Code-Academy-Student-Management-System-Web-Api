@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract;
 using CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity;
@@ -9,16 +7,14 @@ using CodeAcademy.CoreWebApi.DataAccessLayer.Entities;
 using CodeAcademy.CoreWebApi.DataTransferObject;
 using CodeAcademy.CoreWebApi.Entities;
 using CodeAcademy.CoreWebApi.Helpers;
-using CodeAcademy.CoreWebApi.Helpers.Attributes;
 using CodeAcademy.CoreWebApi.Helpers.Extensions;
+using CodeAcademy.CoreWebApi.Helpers.NotifyHelpers;
 using CodeAcademy.CoreWebApi.ViewModels;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Primitives;
 
-namespace CodeAcademy.CoreWebApi.Controllers.Edu    
+namespace CodeAcademy.CoreWebApi.Controllers.Edu
 {
     [Authorize]
     [Route("api/[controller]")]
@@ -39,7 +35,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
         }
 
         [HttpGet]
-        [Route("getallposts")]  
+        [Route("getallposts")]
         public async Task<IActionResult> GetAllPosts()
         {
             if (this.ValidRoleForAction(_context, _auth, new string[] { "Student", "Teacher", "Editor", "Admin" }))
@@ -104,12 +100,18 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
 
                     item.PostTags = artTags;
 
+                    item.AppIdentityUser.Point += 20;
+                    await _auth.UpdateUser(item.AppIdentityUser);
+
                     await _context.Add(item);
 
                     bool saved = _context.SaveAll();
 
                     if (saved == true)
                     {
+                        await _context.Add(new Notifier(_context, _auth).SharePost(item, 20));
+                        _context.SaveAll();
+
                         return Ok(new ArticleViewModel(item));
                     }
                 }
@@ -224,11 +226,13 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                     {
                         article.IsApproved = true;
                         _context.Update(article);
-                        await _context.Add(new Notifier(_context, _auth).Approved(article,current));
+
+                        author.Point += 20;
+                        await _auth.UpdateUser(author);
+
+                        await _context.Add(new Notifier(_context, _auth).Approved(article, current));
                         if (_context.SaveAll())
                         {
-                            author.Point += 20;
-                            await _auth.UpdateUser(author);
                             return Ok(new SuccesApproveModel(current));
                         }
                     }
@@ -266,40 +270,46 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
             if (this.ValidRoleForAction(_context, _auth, new string[] { "Student", "Teacher" }))
             {
                 if (ModelState.IsValid)
-            {
-                string[] tags = model.Tags.Split(',');
-                List<Tag> linkTags = new List<Tag>();
-                foreach (var tag in tags)
                 {
-                    Tag t = await _context.GetByNameAsync<Tag>(x => x.Name.ToLower() == tag.Trim().ToLower());
-                    linkTags.Add(t);
+                    string[] tags = model.Tags.Split(',');
+                    List<Tag> linkTags = new List<Tag>();
+                    foreach (var tag in tags)
+                    {
+                        Tag t = await _context.GetByNameAsync<Tag>(x => x.Name.ToLower() == tag.Trim().ToLower());
+                        linkTags.Add(t);
+                    }
+
+                    Link item = new Link
+                    {
+                        AppIdentityUser = this.GetLoggedUser(_auth, _context),
+                        FacultyId = this.GetLoggedUser(_auth, _context).FacultyId ?? default(int),
+                        HeadText = model.HeadText,
+                        LinkUrl = model.LinkUrl
+                    };
+
+                    List<PostTag> lTags = new List<PostTag>();
+                    foreach (var tag in linkTags)
+                    {
+                        lTags.Add(new PostTag() { Post = item, Tag = tag });
+                    }
+
+                    item.PostTags = lTags;
+
+                    item.AppIdentityUser.Point += 5;
+                    await _auth.UpdateUser(item.AppIdentityUser);
+
+                    await _context.Add(item);
+
+                    bool saved = _context.SaveAll();
+
+                    if (saved == true)
+                    {
+                        await _context.Add(new Notifier(_context, _auth).SharePost(item, 5));
+                        _context.SaveAll();
+                        return Ok(new LinkViewModel(item));
+                    }
+
                 }
-
-                Link item = new Link
-                {
-                    AppIdentityUser =  this.GetLoggedUser(_auth, _context),
-                    FacultyId =  this.GetLoggedUser(_auth, _context).FacultyId ?? default(int),
-                    HeadText = model.HeadText,
-                    LinkUrl = model.LinkUrl
-                };
-
-                List<PostTag> lTags = new List<PostTag>();
-                foreach (var tag in linkTags)
-                {
-                    lTags.Add(new PostTag() { Post = item, Tag = tag });
-                }
-
-                item.PostTags = lTags;
-                await _context.Add(item);
-
-                bool saved = _context.SaveAll();
-
-                if (saved == true)
-                {
-                    return Ok(new LinkViewModel(item));
-                }
-
-            }
                 return BadRequest("Model is not valid");
             }
             return Forbid();
@@ -369,7 +379,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
         public async Task<IActionResult> DeleteLink([FromBody] PostDeleteModel model)
         {
             if (this.ValidRoleForAction(_context, _auth, new string[] { "Student", "Teacher", "Editor" }))
-            {   
+            {
                 AppIdentityUser currentuser = this.GetLoggedUser(_auth, _context);
 
                 if (model.PostUserId == currentuser.Id || await _auth.CheckUserRole(currentuser, "Editor"))
@@ -427,54 +437,60 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
             if (this.ValidRoleForAction(_context, _auth, new string[] { "Student", "Teacher" }))
             {
                 if (ModelState.IsValid)
-            {
-                string[] tags = model.Tags.Split(',');
-                List<Tag> questionTags = new List<Tag>();
-                foreach (var tag in tags)
                 {
-                    Tag t = await _context.GetByNameAsync<Tag>(x => x.Name.ToLower() == tag.Trim().ToLower());
-                    questionTags.Add(t);
-                }
-
-                Question item = new Question
-                {
-                    AppIdentityUser = this.GetLoggedUser(_auth, _context),
-                    FacultyId =  this.GetLoggedUser(_auth, _context).FacultyId ?? default(int),
-                    HeadText = model.HeadText,
-                    Text = model.Text
-                };
-
-                if (model.Photo != null)
-                {
-                    PhotoUploadCloudinary upload = new PhotoUploadCloudinary(_cloudinaryConfig);
-                    Photo photo = upload.Upload(model.Photo);
-                    await _context.Add(photo);
-                    if (_context.SaveAll())
+                    string[] tags = model.Tags.Split(',');
+                    List<Tag> questionTags = new List<Tag>();
+                    foreach (var tag in tags)
                     {
-                        item.Photo = photo;
-                        item.PhotoId = photo.Id;
+                        Tag t = await _context.GetByNameAsync<Tag>(x => x.Name.ToLower() == tag.Trim().ToLower());
+                        questionTags.Add(t);
+                    }
+
+                    Question item = new Question
+                    {
+                        AppIdentityUser = this.GetLoggedUser(_auth, _context),
+                        FacultyId = this.GetLoggedUser(_auth, _context).FacultyId ?? default(int),
+                        HeadText = model.HeadText,
+                        Text = model.Text
+                    };
+
+                    if (model.Photo != null)
+                    {
+                        PhotoUploadCloudinary upload = new PhotoUploadCloudinary(_cloudinaryConfig);
+                        Photo photo = upload.Upload(model.Photo);
+                        await _context.Add(photo);
+                        if (_context.SaveAll())
+                        {
+                            item.Photo = photo;
+                            item.PhotoId = photo.Id;
+                        }
+                    }
+
+                    List<PostTag> tagPosts = new List<PostTag>();
+                    foreach (var tag in questionTags)
+                    {
+                        tagPosts.Add(new PostTag() { Post = item, Tag = tag });
+                    }
+
+                    item.PostTags = tagPosts;
+
+                    item.AppIdentityUser.Point += 10;
+                    await _auth.UpdateUser(item.AppIdentityUser);
+
+                    await _context.Add(item);
+
+                    bool saved = _context.SaveAll();
+                    if (saved == true)
+                    {
+                        await _context.Add(new Notifier(_context, _auth).SharePost(item, 10));
+                        _context.SaveAll();
+
+                        QuestionViewModel viewModel = new QuestionViewModel(item);
+                        if (item.Photo != null)
+                            viewModel.Photo = item.Photo.Url;
+                        return Ok(viewModel);
                     }
                 }
-
-                List<PostTag> tagPosts = new List<PostTag>();
-                foreach (var tag in questionTags)
-                {
-                    tagPosts.Add(new PostTag() { Post = item, Tag = tag });
-                }
-
-                item.PostTags = tagPosts;
-
-                await _context.Add(item);
-
-                bool saved = _context.SaveAll();
-                if (saved == true)
-                {
-                    QuestionViewModel viewModel = new QuestionViewModel(item);
-                    if (item.Photo != null)
-                        viewModel.Photo = item.Photo.Url;
-                    return Ok(viewModel);
-                }
-            }
                 return Ok();
             }
             return Forbid();
@@ -726,10 +742,16 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                         };
 
                         await _context.Add(item);
-                        await _context.Add(new Notifier(_context, _auth).Comment(item));
+
+                        current.Point += 5;
+                        await _auth.UpdateUser(item.User);
+
                         bool saved = _context.SaveAll();
                         if (saved == true)
                         {
+                            await _context.Add(new Notifier(_context, _auth).Comment(item));
+                            _context.SaveAll();
+
                             CommentViewModel viewModel = new CommentViewModel(item);
                             if (current.UserType == "Student")
                             {
@@ -822,7 +844,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
             {
                 if (ModelState.IsValid)
                 {
-                    if (await _context.GetByIdAsync<Question>(x=>x.Id == model.PostId) != null)
+                    if (await _context.GetByIdAsync<Question>(x => x.Id == model.PostId) != null)
                     {
                         List<Comment> comments = await _context.GetComments(model.PostId);
                         if (comments.Count > 0)
@@ -848,11 +870,11 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                 {
                     AppIdentityUser current = this.GetLoggedUser(_auth, _context);
                     Comment commentToLike = await _context.GetComment(model.PostId);
-                    AppIdentityUser commentAuthor = await _auth.FindUserById(model.PostUserId); 
+                    AppIdentityUser commentAuthor = await _auth.FindUserById(model.PostUserId);
 
                     if (model.IsLiked == true)
                     {
-                        if (commentAuthor.Id == current.Id) 
+                        if (commentAuthor.Id == current.Id)
                         {
                             return BadRequest("You can't like your own comment");
                         }
@@ -870,15 +892,18 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                             if (await _auth.CheckUserRole(current, "Teacher"))
                             {
                                 commentToLike.IsApproved = true;
+                                _context.Update(commentToLike);
+
                                 commentAuthor.Point += 10;
                                 await _auth.UpdateUser(commentAuthor);
-                                _context.Update(commentToLike);
+
                                 await _context.Add(new Notifier(_context, _auth).Like(likeToAdd, 10));
                             }
                             else
                             {
                                 commentAuthor.Point += 1;
                                 await _auth.UpdateUser(commentAuthor);
+
                                 await _context.Add(new Notifier(_context, _auth).Like(likeToAdd, 1));
                             }
 
@@ -890,8 +915,8 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                                 return BadRequest("Error adding like to comment");
                         }
                         return NotFound("Comment not found");
-                    }                    
-                    else 
+                    }
+                    else
                     {
                         Like likeToDelete = await _context.GetCommentLike(model.PostId, current.Id);
                         if (likeToDelete != null)
@@ -901,15 +926,18 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                             if (await _auth.CheckUserRole(current, "Teacher"))
                             {
                                 commentToLike.IsApproved = true;
+                                _context.Update(commentToLike);
+
                                 commentAuthor.Point -= 10;
                                 await _auth.UpdateUser(commentAuthor);
-                                _context.Update(commentToLike);
+
                                 await _context.Add(new Notifier(_context, _auth).Dislike(likeToDelete, 10));
                             }
                             else
                             {
                                 commentAuthor.Point -= 1;
                                 await _auth.UpdateUser(commentAuthor);
+
                                 await _context.Add(new Notifier(_context, _auth).Dislike(likeToDelete, 1));
                             }
 
@@ -921,6 +949,55 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                         }
                         return NotFound("Like not found");
                     }
+                }
+                return BadRequest("Model is not valid");
+            }
+            return Forbid();
+        }
+
+        [HttpPost]
+        [Route("reply")]
+        public async Task<IActionResult> ReplyComment([FromForm] CommentModel model)
+        {
+            if (this.ValidRoleForAction(_context, _auth, new string[] { "Student", "Teacher", "Editor", "Admin" }))
+            {
+                if (ModelState.IsValid)
+                {
+                    AppIdentityUser current = this.GetLoggedUser(_auth, _context);
+                    Question question = await _context.GetQuestion(model.PostId);
+                    Comment parent = await _context.GetComment(model.ParentId);
+
+                    if (question != null)
+                    {
+                        Comment item = new Comment
+                        {
+                            Post = question,
+                            Text = model.Text,
+                            User = current,
+                            ParentId = parent.Id
+                        };
+
+                        await _context.Add(item);
+
+                        current.Point += 5;
+                        await _auth.UpdateUser(item.User);
+
+                        bool saved = _context.SaveAll();
+                        if (saved == true)
+                        {
+                            await _context.Add(new Notifier(_context, _auth).Comment(item));
+                            _context.SaveAll();
+
+                            CommentViewModel viewModel = new CommentViewModel(item);
+                            if (current.UserType == "Student")
+                            {
+                                viewModel.GroupName = _context.GetUserGroup(current.Id);
+                            }
+                            return Ok(viewModel);
+                        }
+                        return BadRequest("Error adding comment");
+                    }
+                    return NotFound("Question not found!");
                 }
                 return BadRequest("Model is not valid");
             }

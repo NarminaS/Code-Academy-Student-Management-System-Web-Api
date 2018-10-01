@@ -18,6 +18,7 @@ namespace CodeAcademy.CoreWebApi.DataTransferObject
         public string Name { get; set; }
 
         [Required]
+        [PersonFullName]
         public string Author { get; set; }
 
         [Required]

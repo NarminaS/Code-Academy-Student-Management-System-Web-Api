@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract;
@@ -9,13 +8,13 @@ using CodeAcademy.CoreWebApi.DataTransferObject;
 using CodeAcademy.CoreWebApi.Entities;
 using CodeAcademy.CoreWebApi.Helpers;
 using CodeAcademy.CoreWebApi.Helpers.Extensions;
+using CodeAcademy.CoreWebApi.Helpers.NotifyHelpers;
 using CodeAcademy.CoreWebApi.ViewModels;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-namespace CodeAcademy.CoreWebApi.Controllers.Edu    
+namespace CodeAcademy.CoreWebApi.Controllers.Edu
 {
     [Authorize]
     [Route("api/[controller]")]
@@ -40,7 +39,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
         public async Task<IActionResult> GetAll()
         {
             var result = await _context.GetAllBooks();
-            return Ok(result.Select(x=>new BookViewModel(x)));
+            return Ok(result.Select(x => new BookViewModel(x)));
         }
 
         [HttpPost]
@@ -90,6 +89,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                     await _context.Add(photo);
                     await _context.Add(item);
 
+                    _context.SaveAll();
                     var broadcast = new Notifier(_context, _auth);
                     await _context.AddRange(await broadcast.NewBook(item));
 
@@ -286,14 +286,14 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                     }
                     if (filtered.Count > 0)
                     {
-                        return Ok(filtered.Select(x=>new BookViewModel(x)));
+                        return Ok(filtered.Select(x => new BookViewModel(x)));
                     }
                     return NotFound("No books with this tag were found");
                 }
                 return BadRequest("Model is not valid");
             }
             return Forbid();
-        }   
+        }
 
         [HttpPost]
         [Route("approve")]
@@ -305,7 +305,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                 AppIdentityUser author = await _auth.FindUserById(model.PostAuthorId);
                 if (ModelState.IsValid)
                 {
-                    Book book = await _context.GetByIdAsync<Book>(x => x.Id == model.PostId);
+                    Book book = await _context.GetBook(model.PostId);
                     if (book != null && book.IsApproved == false)
                     {
                         book.IsApproved = true;
