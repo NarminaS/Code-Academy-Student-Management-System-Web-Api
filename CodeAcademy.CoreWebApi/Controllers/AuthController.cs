@@ -7,6 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 using CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract;
 using CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity;
+using CodeAcademy.CoreWebApi.DataTransferObject;
+using CodeAcademy.CoreWebApi.Helpers.Logging;
+using CodeAcademy.CoreWebApi.Helpers.Services;
 using CodeAcademy.CoreWebApi.UiModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -17,18 +20,20 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace CodeAcademy.CoreWebApi.Controllers
 {
-    
+    [AllowAnonymous]
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {
         private IAuthRepository _authrepository;
         private IConfiguration Configuration { get; }
+        private Logger _logger;
         public AuthController(IAuthRepository authrepository, 
-                              IConfiguration configuration)
+                              IConfiguration configuration, Logger logger)
         {
             _authrepository = authrepository;
             Configuration = configuration;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -49,7 +54,7 @@ namespace CodeAcademy.CoreWebApi.Controllers
                 var token = new JwtSecurityToken(
                     issuer: "http://oec.com",
                     audience: "http://oec.com",
-                    expires: DateTime.UtcNow.AddHours(1),
+                    expires: DateTime.UtcNow.AddDays(7),
                     claims: claims,
                     signingCredentials: new Microsoft.IdentityModel.Tokens.SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256)
                     );
@@ -57,7 +62,7 @@ namespace CodeAcademy.CoreWebApi.Controllers
                 var usertoken = new JwtSecurityTokenHandler().WriteToken(token);
                 user.LoginToken = usertoken;
                 await _authrepository.UpdateUser(user);
-
+                _logger.LogInInfo(user.Email, "Log in", Request.Path);
                 return Ok(new
                 {
                     token = usertoken,
@@ -68,6 +73,38 @@ namespace CodeAcademy.CoreWebApi.Controllers
             {
                 return Unauthorized();
             }
+        }
+
+        [HttpPost]
+        [Route("forgotpassword")]
+        public async Task<IActionResult> ForgotPassword([FromForm] ForgotPasswordModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                AppIdentityUser user = await _authrepository.FindUserByEmail(model.Email);
+                if (user != null)
+                {
+                    var _code = _authrepository.GeneratePasswordResetToken(user);
+                    var callbackUrl = Url.Action(
+                                                 "ResetPassword", "Auth",
+                                                  new { userId = user.Id, code = _code },
+                                                  protocol: HttpContext.Request.Scheme
+                                                 );
+                     await new EmailService().SendEmailAsync(user.Name, model.Email, $"{user.Name} - Password reset",
+                                                            $"To reset click: <a href='{callbackUrl}'>link</a> ");
+                    return Ok($"{user.Name}, check your email for reset password");
+                }
+                return NotFound($"User with {model.Email} does not exist");
+            }
+            return BadRequest("Model not found");
+        }
+
+
+        [HttpPost]
+        [Route("resetpassword")]
+        public async Task<IActionResult> ResetPassword(string code, string userId)
+        {
+            return Ok();
         }
 
 

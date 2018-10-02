@@ -14,6 +14,7 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract
         Task<AppIdentityUser> ConfirmEmail(AppIdentityUser user, string code);
         Task<bool> CheckUserRole(AppIdentityUser user, string roleName);
         Task<string> GenerateEmailConfirmToken(AppIdentityUser user);
+        Task<string> GeneratePasswordResetToken(AppIdentityUser user);
         AppIdentityUser GetUserFromToken(string token);
         Task<AppIdentityUser> Login(string username, string password);
         Task<AppIdentityUser> UpdateUser(AppIdentityUser user);

@@ -18,7 +18,6 @@ namespace CodeAcademy.CoreWebApi.Helpers.Extensions
     {
         public static async Task SendConfirmaitionMail(this ControllerBase controller, AppIdentityUser user,IAuthRepository repository, IUrlHelper urlHelper)
         {
-
             var _code = await repository.GenerateEmailConfirmToken(user);
             var callbackUrl = urlHelper.Action("ConfirmEmail",
                                                "Account",
@@ -26,8 +25,6 @@ namespace CodeAcademy.CoreWebApi.Helpers.Extensions
                                                protocol: controller.HttpContext.Request.Scheme);
             await new EmailService().SendEmailAsync(user.Name, user.Email, $"CodeAcademy - {user.Name} - confirmation",
                                                     $"Confirm your registration via this link: <a href='{callbackUrl}'>link</a>");
-
-
         }
 
         public static AppIdentityUser GetLoggedUser(this ControllerBase controller, IAuthRepository authRepo, IAppRepository appRepo)
@@ -44,7 +41,7 @@ namespace CodeAcademy.CoreWebApi.Helpers.Extensions
                 {
                     Student student = appRepo.GetByIdAsync<Student>(x => x.Id == user.Id).Result;
                     Group group = appRepo.GetByIdAsync<Group>(x => x.Id == student.GroupId).Result;
-                    Photo studPhoto = appRepo.GetPhoto(student.PhotoId);
+                    Photo studPhoto =  appRepo.GetPhoto(student.PhotoId).Result;
                     student.FacultyId = group.FacultyId;
                     student.Photo = studPhoto;
                     student.Group = group;
@@ -53,7 +50,7 @@ namespace CodeAcademy.CoreWebApi.Helpers.Extensions
                 if (user.UserType == "Teacher")
                 {
                     Teacher teacher = appRepo.GetByIdAsync<Teacher>(x => x.Id == user.Id).Result;
-                    Photo userPhoto = appRepo.GetPhoto(user.PhotoId);
+                    Photo userPhoto = appRepo.GetPhoto(user.PhotoId).Result;
                     Faculty faculty = appRepo.GetByIdAsync<Faculty>(x => x.Id == teacher.FacultyId).Result;
                     teacher.Faculty = faculty;
                     teacher.Photo = userPhoto;

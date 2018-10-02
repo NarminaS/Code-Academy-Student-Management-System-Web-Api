@@ -1,9 +1,11 @@
 ﻿using CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract;
 using CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete;
+using CodeAcademy.CoreWebApi.Controllers.Hubs;
 using CodeAcademy.CoreWebApi.DataAccessLayer;
 using CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity;
 using CodeAcademy.CoreWebApi.DataAccessLayer.Context;
 using CodeAcademy.CoreWebApi.Helpers;
+using CodeAcademy.CoreWebApi.Helpers.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -17,6 +19,10 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
+using Serilog.Sinks.MSSqlServer;
+using System.Collections.ObjectModel;
+using System.Data;
 using System.Text;
 
 namespace CodeAcademy.CoreWebApi
@@ -37,8 +43,6 @@ namespace CodeAcademy.CoreWebApi
 
             //cloudinary
             services.Configure<CloudinarySettings>(Configuration.GetSection("Cloudinary"));
-
-            //services.AddDbContext<AppDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Con1")));
 
             services.AddDbContext<AppIdentityDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("Con1")));
 
@@ -89,6 +93,30 @@ namespace CodeAcademy.CoreWebApi
 
             services.AddScoped<IAppRepository, AppRepository>();
             services.AddScoped<IAuthRepository, AuthRepository>();
+
+            services.AddSingleton<Serilog.ILogger>(x =>
+            {
+                var columnOptions = new ColumnOptions
+                {
+                    AdditionalDataColumns = new Collection<DataColumn>
+                    {
+                       new DataColumn {DataType = typeof(string), ColumnName = "UserName"},
+                       new DataColumn {DataType = typeof(string), ColumnName = "InfoType"},
+                       new DataColumn {DataType = typeof(string), ColumnName = "RequestUrl"}
+                    }
+                };
+                columnOptions.Store.Remove(StandardColumn.Properties);
+                columnOptions.Store.Add(StandardColumn.LogEvent);
+                return new LoggerConfiguration().WriteTo.MSSqlServer(Configuration["Serilog:ConnectionString"],
+                                                                    Configuration["Serilog:TableName"],
+                                                                    autoCreateSqlTable: true,
+                                                                    columnOptions: columnOptions)
+                                                                    .CreateLogger();
+            });
+
+            services.AddTransient<Logger>();
+            //SignalR
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -103,12 +131,11 @@ namespace CodeAcademy.CoreWebApi
                 app.UseHsts();
             }
             app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin().AllowCredentials());
-            
-            //moved program.cs
-            //SeedDatabase.Initialize(app.ApplicationServices
-            //                .GetRequiredService<IServiceScopeFactory>()
-            //                            .CreateScope()
-            //                            .ServiceProvider);
+
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<MessengerHub>("/message");
+            });
 
             app.UseAuthentication();
             app.UseHttpsRedirection();

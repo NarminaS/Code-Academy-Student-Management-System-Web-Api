@@ -29,6 +29,8 @@ namespace CodeAcademy.CoreWebApi.DataTransferObject
         [Required]
         public int FacultyId { get; set; }
 
+        public int LessonStatusId { get; set; } 
+
         [Required]
         public string TeacherId { get; set; }
 

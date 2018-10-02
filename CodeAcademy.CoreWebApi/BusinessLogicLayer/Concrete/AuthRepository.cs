@@ -117,9 +117,6 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
         public async Task<AppIdentityUser> FindUserById(string id)
         {
             AppIdentityUser user = await _usermanager.FindByIdAsync(id);
-            Photo userPhoto = _context.Photos.SingleOrDefault(x => x.Id == user.PhotoId);
-            user.Photo = userPhoto;
-            //TODO: Remove THIS Code line 118, 119!
             if (user != null)
                 return user;
             else
@@ -209,6 +206,15 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
            AppIdentityUser user = _context.Users.Include(x=>x.Photo)
                                                         .Where(x=>x.LoginToken==token).FirstOrDefault();
            return user;
+        }
+
+        public async Task<string> GeneratePasswordResetToken(AppIdentityUser user)
+        {
+            var code = await _usermanager.GeneratePasswordResetTokenAsync(user);
+            if (!String.IsNullOrEmpty(code))
+                return code;
+            else
+                return String.Empty;
         }
     }
 }

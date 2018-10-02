@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CodeAcademy.CoreWebApi.Controllers.Administrator
 {
+    [AllowAnonymous]
     [Route("api/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase
@@ -32,7 +34,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Administrator
             {
                 bool confirmed = await _context.ConfirmEmail(user, code) != null;
                 if (confirmed)
-                    return Ok(user);
+                    return Ok($"{user.Email} has been confirmed");
                 else
                     return BadRequest("Confirmation error");
             }

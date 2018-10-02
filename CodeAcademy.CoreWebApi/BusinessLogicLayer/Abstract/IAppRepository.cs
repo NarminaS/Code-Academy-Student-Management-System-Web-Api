@@ -20,13 +20,15 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract
 
         void Update<T>(T entity) where T : class;
         void Delete<T>(T entity) where T : class;
-        bool SaveAll();
+        Task<bool> SaveAll();
 
         //sigle methods
         //..
         Task<List<Notification>> GetUnread(string userId);
-        Photo GetPhoto(int photoId);
+        Task<Photo> GetPhoto(int photoId);
         Task<Question> GetQuestion(int questionId);
+        Task<Article> GetArticle(int articleId);
+        Task<Link> GetLink(int linkId);
         Task<Post> GetPost(int postId);
         Task<Like> GetPostLike(int postId, string userId);
         Task<Like> GetCommentLike(int commentId, string userId);

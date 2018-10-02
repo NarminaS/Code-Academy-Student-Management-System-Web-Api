@@ -32,8 +32,12 @@ namespace CodeAcademy.CoreWebApi.Controllers.Editor
         [Route("getall")]
         public async Task<IActionResult> GetAllTeachers()
         {
-            List<AppIdentityUser> students = await _auth.GetUsersByRole("Student");
-            return Ok(students);
+            if (this.ValidRoleForAction(_context, _auth, new string[] { "Editor" }))
+            {
+                List<AppIdentityUser> students = await _auth.GetUsersByRole("Student");
+                return Ok(students);
+            }
+            return Forbid();
         }
 
         [HttpPost]

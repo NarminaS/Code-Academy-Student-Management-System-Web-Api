@@ -39,7 +39,39 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
         public async Task<IActionResult> GetAll()
         {
             var result = await _context.GetAllBooks();
-            return Ok(result.Select(x => new BookViewModel(x)));
+            List<BookViewModel> viewModels = new List<BookViewModel>();
+            foreach (Book book in result)
+            {
+                BookViewModel viewModel = new BookViewModel(book);
+                if (book.AppIdentityUser.UserType == "Student")
+                {
+                    viewModel.GroupName = _context.GetUserGroup(book.AppIdentityUserId);
+                }
+                viewModels.Add(viewModel);
+            }
+            return Ok(viewModels);
+        }
+
+        [HttpGet]
+        [Route("get")]
+        public async Task<IActionResult> Get([FromBody] int id)
+        {
+            if (this.ValidRoleForAction(_context, _auth, new string[] { "Student", "Teacher", "Editor", "Admin" }))
+            {
+                Book book = await _context.GetBook(id);
+                if (book != null)
+                {
+                    if (book.AppIdentityUser.UserType == "Student")
+                    {
+                        BookViewModel viewModel = new BookViewModel(book);
+                        viewModel.GroupName = _context.GetUserGroup(book.AppIdentityUserId);
+                        return Ok(viewModel);
+                    }
+                    return Ok(new BookViewModel(book));
+                }
+                return NotFound("Book not found");
+            }
+            return Forbid();
         }
 
         [HttpPost]
@@ -89,13 +121,19 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                     await _context.Add(photo);
                     await _context.Add(item);
 
-                    _context.SaveAll();
+                    await _context.SaveAll();
                     var broadcast = new Notifier(_context, _auth);
                     await _context.AddRange(await broadcast.NewBook(item));
 
-                    saved = _context.SaveAll();
+                    saved = await _context.SaveAll();
                     if (saved == true)
                     {
+                        if (item.AppIdentityUser.UserType == "Student")
+                        {
+                            BookViewModel viewModel = new BookViewModel(item);
+                            viewModel.GroupName = _context.GetUserGroup(item.AppIdentityUserId);
+                            return Ok(viewModel);
+                        }
                         return Ok(new BookViewModel(item));
                     }
                 }
@@ -103,7 +141,6 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
             }
             return Forbid();
         }
-
 
         [HttpPost]
         [Route("delete")]
@@ -120,10 +157,10 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
                         if (item != null)
                         {
                             _context.Delete(item);
-                            bool result = _context.SaveAll();
+                            bool result = await _context.SaveAll();
 
                             if (result == true)
-                                return Ok(item);
+                                return Ok("Success");
                             else
                                 return BadRequest("Model cannot be  deleted");
                         }
@@ -138,7 +175,6 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
             }
             return Forbid();
         }
-
 
         [HttpPost]
         [Route("update")]
@@ -194,10 +230,16 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
 
                         await _context.Add(photo);
                         _context.Update(item);
-                        bool saved = _context.SaveAll();
+                        bool saved = await _context.SaveAll();
                         if (saved == true)
                         {
-                            return Ok(item);
+                            if (item.AppIdentityUser.UserType == "Student")
+                            {
+                                BookViewModel viewModel = new BookViewModel(item);
+                                viewModel.GroupName = _context.GetUserGroup(item.AppIdentityUserId);
+                                return Ok(viewModel);
+                            }
+                            return Ok(new BookViewModel(item));
                         }
                         else
                         {
@@ -313,7 +355,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
 
                         await _context.Add(new Notifier(_context, _auth).Approved(book, current));
 
-                        if (_context.SaveAll())
+                        if (await _context.SaveAll())
                         {
                             author.Point += 15;
                             await _auth.UpdateUser(author);
@@ -345,7 +387,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Edu
 
                         await _context.Add(new Notifier(_context, _auth).Disapproved(book, current, model.Reason));
 
-                        if (_context.SaveAll())
+                        if (await _context.SaveAll())
                         {
                             return Ok($"The book has been deleted by {current.Name} {current.Surname}");
                         }

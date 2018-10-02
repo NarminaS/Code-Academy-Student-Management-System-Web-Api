@@ -12,6 +12,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Builder;
 using CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity;
 using Microsoft.AspNetCore.Identity;
+using Serilog.Sinks.MSSqlServer;
+using System.Data;
+using System.Collections.ObjectModel;
+using Serilog;
 
 namespace CodeAcademy.CoreWebApi
 {

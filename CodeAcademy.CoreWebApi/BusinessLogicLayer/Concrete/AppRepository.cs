@@ -37,14 +37,14 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
                                                     .Include(x=>x.Photo)
                                                     .Include(x=>x.Language)
                                                     .Include(x=>x.Likes)
-                                                    .Include(x=>x.AppIdentityUser)
+                                                    .Include(x=>x.AppIdentityUser).ThenInclude(x=>x.Photo)
                                                     .Include(x=>x.File).ToListAsync();
             return books;
         }
 
         public async Task<List<Room>> GetAllRoomsAsync()
         {
-            List<Room> rooms = await _context.Rooms.ToListAsync();
+            List<Room> rooms = await _context.Rooms.Include(x=>x.Groups).ToListAsync();
             return rooms;
         }
 
@@ -62,7 +62,8 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
 
         public async Task<List<Faculty>> GetFacultiesAsync()
         {
-            List<Faculty> faculties = await _context.Faculties.Include(x => x.Photo).ToListAsync();
+            List<Faculty> faculties = await _context.Faculties.Include(x => x.Photo)
+                                                               .Include(x=>x.Groups).ToListAsync();
             return faculties;
         }
 
@@ -86,13 +87,13 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
 
         public async Task<List<LessonStatus>> GetLessonStatusesAsync()
         {
-            List<LessonStatus> lessonStatuses = await _context.LessonStatuses.ToListAsync();
+            List<LessonStatus> lessonStatuses = await _context.LessonStatuses.Include(x=>x.Students).ToListAsync();
             return lessonStatuses;
         }
 
-        public Photo GetPhoto(int photoId)
+        public async Task<Photo> GetPhoto(int photoId)
         {
-            return _context.Photos.Where(photo => photo.Id == photoId).SingleOrDefault();
+            return await _context.Photos.Where(photo => photo.Id == photoId).SingleOrDefaultAsync();
         }
 
         public async Task<List<Tag>> GetTagsAsync()
@@ -101,9 +102,10 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
             return tags;
         }
 
-        public bool SaveAll()
+        public async Task<bool> SaveAll()
         {
-            return _context.SaveChanges()>0;
+            int affected = await _context.SaveChangesAsync();
+            return affected > 0;
         }
 
         public void Update<T>(T entity) where T : class
@@ -320,8 +322,32 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
         public async Task<Book> GetBook(int id)
         {
             Book book = await _context.Books.Include(x => x.AppIdentityUser).ThenInclude(x => x.Photo)
+                                            .Include(x=>x.File)
+                                            .Include(x=>x.Photo)
+                                            .Include(c=>c.Language)
+                                            .Include(x=>x.Likes)
+                                            .Include(x=>x.PostTags).ThenInclude(x=>x.Tag)
+                                            .Include(c=>c.Faculty)
                                         .FirstOrDefaultAsync(x => x.Id == id);
             return book;
+        }
+
+        public async Task<Article> GetArticle(int articleId)
+        {
+            Article article = await _context.Articles.Include(x => x.AppIdentityUser).ThenInclude(x => x.Photo)
+                                               .Include(x => x.Likes)
+                                               .Include(x => x.PostTags).ThenInclude(x => x.Tag)
+                                               .FirstOrDefaultAsync(x => x.Id == articleId);
+            return article;
+        }
+
+        public async Task<Link> GetLink(int linkId)
+        {
+            Link link = await _context.Links.Include(x => x.AppIdentityUser).ThenInclude(x => x.Photo)
+                                            .Include(x => x.Likes)
+                                            .Include(x => x.PostTags).ThenInclude(x => x.Tag)
+                                            .FirstOrDefaultAsync(x => x.Id == linkId);
+            return link;
         }
     }
 }

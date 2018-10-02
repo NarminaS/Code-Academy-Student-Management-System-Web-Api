@@ -53,7 +53,7 @@ namespace CodeAcademy.CoreWebApi.Controllers
                 {
                     notification.IsVisited = true;
                     _context.Update(notification);
-                    if (_context.SaveAll())
+                    if (await _context.SaveAll())
                     {
                         return Ok(notification.IsVisited);
                     }
