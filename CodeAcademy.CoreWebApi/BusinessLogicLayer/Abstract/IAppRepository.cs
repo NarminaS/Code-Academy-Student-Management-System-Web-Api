@@ -1,7 +1,6 @@
 ﻿using CodeAcademy.CoreWebApi.DataAccessLayer.Entities;
 using CodeAcademy.CoreWebApi.Entities;
 using CodeAcademy.CoreWebApi.Entities.InterfaceEntity;
-using CodeAcademy.CoreWebApi.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;

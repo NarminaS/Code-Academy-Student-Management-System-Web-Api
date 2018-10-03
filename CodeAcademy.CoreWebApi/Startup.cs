@@ -108,10 +108,10 @@ namespace CodeAcademy.CoreWebApi
                 columnOptions.Store.Remove(StandardColumn.Properties);
                 columnOptions.Store.Add(StandardColumn.LogEvent);
                 return new LoggerConfiguration().WriteTo.MSSqlServer(Configuration["Serilog:ConnectionString"],
-                                                                    Configuration["Serilog:TableName"],
-                                                                    autoCreateSqlTable: true,
-                                                                    columnOptions: columnOptions)
-                                                                    .CreateLogger();
+                                                                     Configuration["Serilog:TableName"],
+                                                                     autoCreateSqlTable: true,
+                                                                     columnOptions: columnOptions)
+                                                                     .CreateLogger();
             });
 
             services.AddTransient<Logger>();

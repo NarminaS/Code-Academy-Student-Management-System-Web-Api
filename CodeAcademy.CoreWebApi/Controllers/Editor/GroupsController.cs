@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 using CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract;
 using CodeAcademy.CoreWebApi.DataAccessLayer.Entities;
 using CodeAcademy.CoreWebApi.DataTransferObject;
+using CodeAcademy.CoreWebApi.DataTransferObject.FromView;
 using CodeAcademy.CoreWebApi.Entities;
 using CodeAcademy.CoreWebApi.Helpers;
 using CodeAcademy.CoreWebApi.Helpers.Extensions;
+using CodeAcademy.CoreWebApi.Helpers.Logging;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,91 +22,66 @@ namespace CodeAcademy.CoreWebApi.Controllers.Editor
     [ApiController]
     public class GroupsController : ControllerBase
     {
+        private Logger _logger;
         private IAppRepository _context;
         private IAuthRepository _auth;
         private IOptions<CloudinarySettings> _cloudinaryConfig;
 
-        public GroupsController(IAppRepository context, IAuthRepository auth, IOptions<CloudinarySettings> cloudinaryConfig)
+        public GroupsController(IAppRepository context,
+                                         IAuthRepository auth, Logger logger,
+                                            IOptions<CloudinarySettings> cloudinaryConfig)
         {
             _context = context;
             _auth = auth;
             _cloudinaryConfig = cloudinaryConfig;
+            _logger = logger;
         }
 
         [HttpGet]
         [Route("getall")]
         public async Task<IActionResult> GetAllTeachers()
         {
-            if (this.ValidRoleForAction(_context, _auth, new string[] { "Editor" }))
+            try
             {
-                List<Group> groups = await _context.GetAllGroups();
-                return Ok(groups);
+                if (this.ValidRoleForAction(_context, _auth, new string[] { "Editor" }))
+                {
+                    List<Group> groups = await _context.GetAllGroups();
+                    return Ok(groups);
+                }
+                return Forbid();
             }
-            return Forbid();
+            catch (Exception ex)
+            {
+                var arguments = this.GetBaseData(_context, _auth);
+                _logger.LogException(ex, arguments.Email, arguments.Path);
+                return BadRequest($"{ex.GetType().Name} was thrown.");
+            }
         }
 
         [HttpPost]
         [Route("add")]
         public async Task<IActionResult> AddGroup([FromForm]GroupModel model)
         {
-            if (this.ValidRoleForAction(_context, _auth, new string[] { "Editor" }))
+            try
             {
-                if (ModelState.IsValid)
+                if (this.ValidRoleForAction(_context, _auth, new string[] { "Editor" }))
                 {
-                    PhotoUploadCloudinary upload = new PhotoUploadCloudinary(_cloudinaryConfig);    
-                    Photo photo = upload.Upload(model.Photo);
-
-                    Group item = new Group
+                    if (ModelState.IsValid)
                     {
-                        Name = model.Name,
-                        FacultyId = model.FacultyId,
-                        LessonEndDate = model.LessonEndDate,
-                        LessonStartDate = model.LessonStartDate,
-                        LessonHourId = model.LessonHourId,
-                        LessonStatusId = 1,
-                        Photo = photo,
-                        RoomId = model.RoomId
-                    };
+                        PhotoUploadCloudinary upload = new PhotoUploadCloudinary(_cloudinaryConfig);
+                        Photo photo = upload.Upload(model.Photo);
 
-                    Teacher teacher = await _context.GetByIdAsync<Teacher>(x => x.Id == model.TeacherId);
-                    if (teacher != null)
-                    {
-                        TeacherGroup teacherGroup = new TeacherGroup { Group = item, Teacher = teacher };
-                        await _context.Add(teacherGroup);
-                    }
-                    await _context.Add(item);
-                    if (await _context.SaveAll())
-                    {
-                        return Ok(item);
-                    }
-                }
-                return BadRequest("Model is not valid");
-            }
-            return Forbid();
-        }
-
-        [HttpPost]
-        [Route("update")]
-        public async Task<IActionResult> UpdateGroup([FromForm] GroupModel model)
-        {
-            if (this.ValidRoleForAction(_context, _auth, new string[] { "Editor" }))
-            {
-                if (ModelState.IsValid)
-                {
-                    PhotoUploadCloudinary upload = new PhotoUploadCloudinary(_cloudinaryConfig);
-                    Photo photo = upload.Upload(model.Photo);
-
-                    Group item = await _context.GetByIdAsync<Group>(x => x.Id == model.Id);
-                    if (item != null)
-                    {
-                        item.FacultyId = model.FacultyId;
-                        item.LessonHourId = model.LessonHourId;
-                        item.LessonStartDate = model.LessonStartDate;
-                        item.LessonEndDate = model.LessonEndDate;
-                        item.LessonStatusId = model.LessonStatusId;
-                        item.Name = model.Name;
-                        item.Photo = photo;
-                        item.RoomId = model.RoomId;
+                        Group item = new Group
+                        {
+                            Name = model.Name,
+                            FacultyId = model.FacultyId,
+                            LessonEndDate = model.LessonEndDate,
+                            LessonStartDate = model.LessonStartDate,
+                            LessonHourId = model.LessonHourId,
+                            LessonStatusId = 1,
+                            Photo = photo,
+                            RoomId = model.RoomId
+                        };
 
                         Teacher teacher = await _context.GetByIdAsync<Teacher>(x => x.Id == model.TeacherId);
                         if (teacher != null)
@@ -112,19 +89,75 @@ namespace CodeAcademy.CoreWebApi.Controllers.Editor
                             TeacherGroup teacherGroup = new TeacherGroup { Group = item, Teacher = teacher };
                             await _context.Add(teacherGroup);
                         }
-
-                        _context.Update(item);
+                        await _context.Add(item);
                         if (await _context.SaveAll())
                         {
                             return Ok(item);
                         }
-                        return BadRequest("Error updating group");
                     }
-                    return NotFound("Group not found");
+                    return BadRequest("Model is not valid");
                 }
-                return BadRequest("Model is not valid");
+                return Forbid();
             }
-            return Forbid();
+            catch (Exception ex)
+            {
+                var arguments = this.GetBaseData(_context, _auth);
+                _logger.LogException(ex, arguments.Email, arguments.Path);
+                return BadRequest($"{ex.GetType().Name} was thrown.");
+            }
+        }
+
+        [HttpPost]
+        [Route("update")]
+        public async Task<IActionResult> UpdateGroup([FromForm] GroupModel model)
+        {
+            try
+            {
+                if (this.ValidRoleForAction(_context, _auth, new string[] { "Editor" }))
+                {
+                    if (ModelState.IsValid)
+                    {
+                        PhotoUploadCloudinary upload = new PhotoUploadCloudinary(_cloudinaryConfig);
+                        Photo photo = upload.Upload(model.Photo);
+
+                        Group item = await _context.GetByIdAsync<Group>(x => x.Id == model.Id);
+                        if (item != null)
+                        {
+                            item.FacultyId = model.FacultyId;
+                            item.LessonHourId = model.LessonHourId;
+                            item.LessonStartDate = model.LessonStartDate;
+                            item.LessonEndDate = model.LessonEndDate;
+                            item.LessonStatusId = model.LessonStatusId;
+                            item.Name = model.Name;
+                            item.Photo = photo;
+                            item.RoomId = model.RoomId;
+
+                            Teacher teacher = await _context.GetByIdAsync<Teacher>(x => x.Id == model.TeacherId);
+                            if (teacher != null)
+                            {
+                                TeacherGroup teacherGroup = new TeacherGroup { Group = item, Teacher = teacher };
+                                await _context.Add(teacherGroup);
+                            }
+
+                            _context.Update(item);
+                            if (await _context.SaveAll())
+                            {
+                                return Ok(item);
+                            }
+                            return BadRequest("Error updating group");
+                        }
+                        return NotFound("Group not found");
+                    }
+                    return BadRequest("Model is not valid");
+                }
+                return Forbid();
+            }
+            catch (Exception ex)
+            {
+                var arguments = this.GetBaseData(_context, _auth);
+                _logger.LogException(ex, arguments.Email, arguments.Path);
+                return BadRequest($"{ex.GetType().Name} was thrown.");
+            }
         }
     }
 }

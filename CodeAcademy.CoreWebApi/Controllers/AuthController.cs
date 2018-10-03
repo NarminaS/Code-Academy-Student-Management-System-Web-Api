@@ -8,9 +8,10 @@ using System.Threading.Tasks;
 using CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract;
 using CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity;
 using CodeAcademy.CoreWebApi.DataTransferObject;
+using CodeAcademy.CoreWebApi.DataTransferObject.FromView;
+using CodeAcademy.CoreWebApi.Helpers.Extensions;
 using CodeAcademy.CoreWebApi.Helpers.Logging;
 using CodeAcademy.CoreWebApi.Helpers.Services;
-using CodeAcademy.CoreWebApi.UiModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -26,12 +27,14 @@ namespace CodeAcademy.CoreWebApi.Controllers
     public class AuthController : ControllerBase
     {
         private IAuthRepository _authrepository;
+        private IAppRepository _context;
         private IConfiguration Configuration { get; }
         private Logger _logger;
-        public AuthController(IAuthRepository authrepository, 
+        public AuthController(IAuthRepository authrepository, IAppRepository context,
                               IConfiguration configuration, Logger logger)
         {
             _authrepository = authrepository;
+            _context = context;
             Configuration = configuration;
             _logger = logger;
         }
@@ -40,38 +43,47 @@ namespace CodeAcademy.CoreWebApi.Controllers
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            var user = await _authrepository.Login(model.Username, model.Password);
-            if (user != null)
+            try
             {
-                var claims = new[]
+                var user = await _authrepository.Login(model.Username, model.Password);
+                if (user != null)
                 {
+                    var claims = new[]
+                    {
                     new Claim(JwtRegisteredClaimNames.Sub,user.UserName),
                     new Claim(JwtRegisteredClaimNames.Jti,new Guid().ToString())
-                };
+                    };
 
-                var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("AppSettings:Token").Value));
+                    var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetSection("AppSettings:Token").Value));
 
-                var token = new JwtSecurityToken(
-                    issuer: "http://oec.com",
-                    audience: "http://oec.com",
-                    expires: DateTime.UtcNow.AddDays(7),
-                    claims: claims,
-                    signingCredentials: new Microsoft.IdentityModel.Tokens.SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256)
-                    );
+                    var token = new JwtSecurityToken(
+                        issuer: "http://oec.com",
+                        audience: "http://oec.com",
+                        expires: DateTime.UtcNow.AddDays(7),
+                        claims: claims,
+                        signingCredentials: new Microsoft.IdentityModel.Tokens.SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256)
+                        );
 
-                var usertoken = new JwtSecurityTokenHandler().WriteToken(token);
-                user.LoginToken = usertoken;
-                await _authrepository.UpdateUser(user);
-                _logger.LogInInfo(user.Email, "Log in", Request.Path);
-                return Ok(new
+                    var usertoken = new JwtSecurityTokenHandler().WriteToken(token);
+                    user.LoginToken = usertoken;
+                    await _authrepository.UpdateUser(user);
+                    _logger.LogInInfo(user.Email, "Log in", Request.Path);
+                    return Ok(new
+                    {
+                        token = usertoken,
+                        expiration = token.ValidTo
+                    });
+                }
+                else
                 {
-                    token = usertoken,
-                    expiration = token.ValidTo
-                });
+                    return Unauthorized();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return Unauthorized();
+                var arguments = this.GetBaseData(_context, _authrepository);
+                _logger.LogException(ex, arguments.Email, arguments.Path);
+                return BadRequest($"{ex.GetType().Name} was thrown.");
             }
         }
 
@@ -79,24 +91,33 @@ namespace CodeAcademy.CoreWebApi.Controllers
         [Route("forgotpassword")]
         public async Task<IActionResult> ForgotPassword([FromForm] ForgotPasswordModel model)
         {
-            if (ModelState.IsValid)
+            try
             {
-                AppIdentityUser user = await _authrepository.FindUserByEmail(model.Email);
-                if (user != null)
+                if (ModelState.IsValid)
                 {
-                    var _code = _authrepository.GeneratePasswordResetToken(user);
-                    var callbackUrl = Url.Action(
-                                                 "ResetPassword", "Auth",
-                                                  new { userId = user.Id, code = _code },
-                                                  protocol: HttpContext.Request.Scheme
-                                                 );
-                     await new EmailService().SendEmailAsync(user.Name, model.Email, $"{user.Name} - Password reset",
-                                                            $"To reset click: <a href='{callbackUrl}'>link</a> ");
-                    return Ok($"{user.Name}, check your email for reset password");
+                    AppIdentityUser user = await _authrepository.FindUserByEmail(model.Email);
+                    if (user != null)
+                    {
+                        var _code = _authrepository.GeneratePasswordResetToken(user);
+                        var callbackUrl = Url.Action(
+                                                     "ResetPassword", "Auth",
+                                                      new { userId = user.Id, code = _code },
+                                                      protocol: HttpContext.Request.Scheme
+                                                     );
+                        await new EmailService().SendEmailAsync(user.Name, model.Email, $"{user.Name} - Password reset",
+                                                               $"To reset click: <a href='{callbackUrl}'>link</a> ");
+                        return Ok($"{user.Name}, check your email for reset password");
+                    }
+                    return NotFound($"User with {model.Email} does not exist");
                 }
-                return NotFound($"User with {model.Email} does not exist");
+                return BadRequest("Model not found");
             }
-            return BadRequest("Model not found");
+            catch (Exception ex)
+            {
+                var arguments = this.GetBaseData(_context, _authrepository);
+                _logger.LogException(ex, arguments.Email, arguments.Path);
+                return BadRequest($"{ex.GetType().Name} was thrown.");
+            }
         }
 
 

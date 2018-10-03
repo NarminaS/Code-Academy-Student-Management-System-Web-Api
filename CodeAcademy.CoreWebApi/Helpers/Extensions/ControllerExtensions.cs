@@ -77,5 +77,10 @@ namespace CodeAcademy.CoreWebApi.Helpers.Extensions
             }        
             return false;
         }
+
+        public static dynamic GetBaseData(this ControllerBase controller, IAppRepository appRepo, IAuthRepository auth)
+        {
+            return new { controller.GetLoggedUser(auth, appRepo).Email, controller.Request.Path };
+        }
     }
 }

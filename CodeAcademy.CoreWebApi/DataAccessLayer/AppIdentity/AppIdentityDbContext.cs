@@ -66,7 +66,5 @@ namespace CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity
         public DbSet<Certificate> Certificates { get; set; }
         public DbSet<Faculty> Faculties { get; set; }
 
-
-
     }
 }
