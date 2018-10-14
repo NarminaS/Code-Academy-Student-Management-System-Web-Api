@@ -57,7 +57,34 @@ namespace CodeAcademy.CoreWebApi.Controllers.Administrator
             }
         }
 
-
+        [HttpPost]
+        [Route("getbyid")]
+        public async Task<IActionResult> GetById([FromBody] GetByIdModel model)
+        {
+            try
+            {
+                if (this.ValidRoleForAction(_context, _auth, new string[] { "Admin" }))
+                {
+                    if (ModelState.IsValid)
+                    {
+                        AppIdentityUser editor = await _auth.FindUserById(model.UserId);
+                        if (editor != null)
+                        {
+                            return Ok(editor);
+                        }
+                        return NotFound("Editor not found");
+                    }
+                    return BadRequest("Model is not valid");
+                }
+                return Forbid();
+            }
+            catch (Exception ex)
+            {
+                var arguments = this.GetBaseData(_context, _auth);
+                _logger.LogException(ex, arguments.Email, arguments.Path);
+                return BadRequest($"{ex.GetType().Name} was thrown.");
+            }
+        }
 
         [HttpPost]
         [Route("add")]
@@ -87,15 +114,12 @@ namespace CodeAcademy.CoreWebApi.Controllers.Administrator
                             if (saved == true)
                             {
                                 var urlHelper = HttpContext.RequestServices.GetRequiredService<IUrlHelper>();
-                                await this.SendConfirmaitionMail(editor, _auth, urlHelper);
+                                await this.SendConfirmaitionMail(editor, _auth, urlHelper, _logger);
                                 return Ok(editor);
                             }
                         }
-                        else
-                        {
-                            return BadRequest($"User with {model.Email} email already exists");
-                        }
 
+                        return BadRequest($"User with {model.Email} email already exists");
                     }
                     return BadRequest("Model is not valid");
                 }

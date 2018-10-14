@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CodeAcademy.CoreWebApi.Controllers.Administrator
 {
-    [AllowAnonymous]
+    
     [Route("api/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase
@@ -28,6 +28,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Administrator
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> ConfirmEmail(string userId, string code)
         {
             try
@@ -54,6 +55,13 @@ namespace CodeAcademy.CoreWebApi.Controllers.Administrator
                 _logger.LogException(ex, arguments.Email, arguments.Path);
                 return BadRequest($"{ex.GetType().Name} was thrown.");
             }
+        }
+
+        [HttpPost]
+        [Route("changeavatar")]
+        public async Task<IActionResult> ChangeProfilePhoto()
+        {
+            return Ok();
         }
     }
 }

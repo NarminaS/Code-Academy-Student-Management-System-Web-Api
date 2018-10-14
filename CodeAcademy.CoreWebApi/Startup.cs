@@ -114,7 +114,7 @@ namespace CodeAcademy.CoreWebApi
                                                                      .CreateLogger();
             });
 
-            services.AddTransient<Logger>();
+            services.AddTransient<Logger>();    
             //SignalR
             services.AddSignalR();
         }

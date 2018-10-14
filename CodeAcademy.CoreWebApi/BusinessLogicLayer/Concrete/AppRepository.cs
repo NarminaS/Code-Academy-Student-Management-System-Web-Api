@@ -155,14 +155,14 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
             Question question = await _context.Questions.Include(x=>x.Photo)
                                                         .Include(x=>x.AppIdentityUser).ThenInclude(x=>x.Photo)
                                                         .Include(x=>x.Comments)
-                                                            .FirstOrDefaultAsync(x => x.Id == questionId);
+                                                        .FirstOrDefaultAsync(x => x.Id == questionId);
             return question;
         }
 
         public async Task<Post> GetPost(int postId)
         {
             Post post = await _context.Posts.Include(l => l.Likes)
-                                                    .Include(u => u.AppIdentityUser)
+                                                    .Include(u => u.AppIdentityUser).ThenInclude(x=>x.Photo)
                                                     .Include(l=>l.Likes)
                                                     .FirstOrDefaultAsync(x => x.Id == postId);
             return post;
@@ -348,6 +348,12 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Concrete
                                             .Include(x => x.PostTags).ThenInclude(x => x.Tag)
                                             .FirstOrDefaultAsync(x => x.Id == linkId);
             return link;
+        }
+
+        public async Task<Faculty> GetFaculty(int facultyId)
+        {
+            Faculty faculty = await _context.Faculties.Include(x => x.Groups).FirstOrDefaultAsync(x => x.Id == facultyId);
+            return faculty;
         }
     }
 }

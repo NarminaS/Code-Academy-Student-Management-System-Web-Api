@@ -2,6 +2,7 @@
 using CodeAcademy.CoreWebApi.DataAccessLayer.AppIdentity;
 using CodeAcademy.CoreWebApi.DataAccessLayer.Entities;
 using CodeAcademy.CoreWebApi.Entities;
+using CodeAcademy.CoreWebApi.Helpers.Logging;
 using CodeAcademy.CoreWebApi.Helpers.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,15 +17,15 @@ namespace CodeAcademy.CoreWebApi.Helpers.Extensions
 {
     public static class ControllerExtensions
     {
-        public static async Task SendConfirmaitionMail(this ControllerBase controller, AppIdentityUser user,IAuthRepository repository, IUrlHelper urlHelper)
+        public static async Task SendConfirmaitionMail(this ControllerBase controller, AppIdentityUser user,IAuthRepository repository, IUrlHelper urlHelper, Logger logger)
         {
             var _code = await repository.GenerateEmailConfirmToken(user);
             var callbackUrl = urlHelper.Action("ConfirmEmail",
                                                "Account",
                                                new { userId = user.Id, code = _code },
                                                protocol: controller.HttpContext.Request.Scheme);
-            await new EmailService().SendEmailAsync(user.Name, user.Email, $"CodeAcademy - {user.Name} - confirmation",
-                                                    $"Confirm your registration via this link: <a href='{callbackUrl}'>link</a>");
+            await new EmailService(logger).SendEmailAsync(user.Name, user.Email, $"CodeAcademy - {user.Name} - confirmation",
+                                                    $"Confirm your registration via this link: <a href='{callbackUrl}'>link</a>", controller.Request.Path);
         }
 
         public static AppIdentityUser GetLoggedUser(this ControllerBase controller, IAuthRepository authRepo, IAppRepository appRepo)

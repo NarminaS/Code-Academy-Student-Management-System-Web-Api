@@ -57,6 +57,34 @@ namespace CodeAcademy.CoreWebApi.Controllers.Administrator
             }
         }
 
+        [HttpGet]
+        [Route("getbyid")]
+        public async Task<IActionResult> GetById([FromHeader] GetByIdModel model)
+        {
+            try
+            {
+                if (this.ValidRoleForAction(_context, _auth, new string[] { "Admin" }))
+                {
+                    if (ModelState.IsValid)
+                    {
+                        Faculty faculty = await _context.GetFaculty(model.Id.Value);
+                        if (faculty != null)
+                        {
+                            return Ok(faculty);
+                        }
+                        return NotFound("Faculty not found");
+                    }
+                    return BadRequest("Model is not valid");
+                }
+                return Forbid();
+            }
+            catch (Exception ex)
+            {
+                var arguments = this.GetBaseData(_context, _auth);
+                _logger.LogException(ex, arguments.Email, arguments.Path);
+                return BadRequest($"{ex.GetType().Name} was thrown.");
+            }
+        }
 
         [HttpPost]
         [Route("add")]

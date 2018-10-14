@@ -1,11 +1,9 @@
-﻿using Serilog;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json.Linq;
+﻿using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Threading.Tasks;
+using CodeAcademy.CoreWebApi.DataAccessLayer.Entities;
 
 namespace CodeAcademy.CoreWebApi.Helpers.Logging
 {
@@ -22,26 +20,92 @@ namespace CodeAcademy.CoreWebApi.Helpers.Logging
 
         public void LogInInfo(string username, string infotype, string requestUrl)
         {
-            _logger.ForContext("Username", username)
-                   .ForContext("Infotype", infotype)
-                   .ForContext("RequestUrl", requestUrl)
-                   .Information("User {@username} logged in", username);
+            try
+            {
+                _logger.ForContext("Username", username)
+                       .ForContext("Infotype", infotype)
+                       .ForContext("RequestUrl", requestUrl)
+                       .Information("User {username} logged in", username);
+            }
+            catch (Exception ex)
+            {
+                LogException(ex, username, requestUrl);
+            }
         }
 
         public void LogOutInfo(string username, string infotype, string requestUrl)
         {
-            _logger.ForContext("Username", username)
-                   .ForContext("Infotype", infotype)
-                   .ForContext("RequestUrl", requestUrl)
-                   .Information("User {@username} logged out", username);
+            try
+            {
+                _logger.ForContext("Username", username)
+                       .ForContext("Infotype", infotype)
+                       .ForContext("RequestUrl", requestUrl)
+                       .Information("User {username} logged out", username);
+            }
+            catch (Exception ex)
+            {
+                LogException(ex, username, requestUrl);
+            }
         }
 
         public void LogException(Exception ex, string username, string requestUrl)
         {
-            _logger.ForContext("Username", username)
-                   .ForContext("RequestUrl", requestUrl)
-                   .ForContext("Infotype", "Exception")
-                   .Error(ex, @"Exeption : {ex} \r\n Stack trace {st}", ex.Message, ex.StackTrace);
+            try
+            {
+                _logger.ForContext("Username", username)
+                       .ForContext("RequestUrl", requestUrl)
+                       .ForContext("Infotype", "Exception")
+                       .Error(ex, "Exeption : {ex} \r\n Stack trace {st}", ex.Message, ex.StackTrace);
+            }
+            catch (Exception exp)
+            {
+                LogException(exp, username, requestUrl);
+            }
+        }
+
+        public void LogApproveBook(Book book, string username, string requestUrl)
+        {
+            try
+            {
+                _logger.ForContext("Username", username)
+                       .ForContext("Infotype", "BookApprove")
+                       .ForContext("RequestUrl", requestUrl)
+                       .Information("{teacher} approved book \"{book}\" ", username, book.Name);
+            }
+            catch (Exception ex)
+            {
+                LogException(ex, username, requestUrl);
+            }
+        }
+
+        public void LogApproveArticle(Article article, string username, string requestUrl)
+        {
+            try
+            {
+                _logger.ForContext("Username", username)
+                       .ForContext("Infotype", "ArticleApprove")
+                       .ForContext("RequestUrl", requestUrl)
+                       .Information("{teacher} approved article.Id : {id} ", username, article.Id);
+            }
+            catch (Exception ex)
+            {
+                LogException(ex, username, requestUrl);
+            }
+        }
+
+        public void LogDisapproveBook(Book book, string username, string requestUrl, string reason)
+        {
+            try
+            {
+                _logger.ForContext("Username", username)
+                       .ForContext("Infotype", "Disapprove")
+                       .ForContext("RequestUrl", requestUrl)
+                       .Information("{teacher} disapproved book \"{book}\" Reason - {reason} ", username, book.Name, reason);
+            }
+            catch (Exception ex)
+            {
+                LogException(ex, username, requestUrl);
+            }
         }
 
         public async Task<List<Log>> GetLogs(string username, string requestUrl)
@@ -81,8 +145,8 @@ namespace CodeAcademy.CoreWebApi.Helpers.Logging
             catch (Exception ex)
             {
                 LogException(ex, username, requestUrl);
+                return new List<Log>();
             }
-            return null;
         }
     }
 }

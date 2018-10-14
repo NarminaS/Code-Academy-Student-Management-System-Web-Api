@@ -83,7 +83,7 @@ namespace CodeAcademy.CoreWebApi.Controllers.Editor
                             if (saved == true)
                             {
                                 var urlHelper = HttpContext.RequestServices.GetRequiredService<IUrlHelper>();
-                                await this.SendConfirmaitionMail(teacher, _auth, urlHelper);
+                                await this.SendConfirmaitionMail(teacher, _auth, urlHelper,_logger);
                                 return Ok(teacher);
                             }
                             return BadRequest("Error creating teacher");

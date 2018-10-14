@@ -110,7 +110,7 @@ namespace CodeAcademy.CoreWebApi.Controllers
                     }
                     return NotFound($"User with {model.Email} does not exist");
                 }
-                return BadRequest("Model not found");
+                return BadRequest("Model is not valid");
             }
             catch (Exception ex)
             {

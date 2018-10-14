@@ -25,6 +25,7 @@ namespace CodeAcademy.CoreWebApi.BusinessLogicLayer.Abstract
         //..
         Task<List<Notification>> GetUnread(string userId);
         Task<Photo> GetPhoto(int photoId);
+        Task<Faculty> GetFaculty(int facultyId);
         Task<Question> GetQuestion(int questionId);
         Task<Article> GetArticle(int articleId);
         Task<Link> GetLink(int linkId);
